@@ -1,0 +1,6 @@
+{
+  "name": "Remix NoFap Day Counter",
+  "description": "Simple, privacy-focused Android habit \u0026 streak counter with Jetpack Compose Material 3 design, customizable habits, relapse tracking, and an AI recovery coach.",
+  "requestFramePermissions": [],
+  "majorCapabilities": []
+}
