@@ -75,7 +75,7 @@ export const INITIAL_HABITS: Habit[] = [
 ];
 
 export const INITIAL_SETTINGS: AppSettings = {
-  darkMode: true,
+  darkMode: false,
   reminderEnabled: false,
   reminderTime: '20:00',
   dynamicColors: true,
