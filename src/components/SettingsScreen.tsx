@@ -15,8 +15,8 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
 }) => {
   const [showConfirmReset, setShowConfirmReset] = useState(false);
 
-  const isDarkMode = settings.darkMode ?? false;
-  const isReminderEnabled = settings.reminderEnabled ?? false;
+  const isDarkMode = Boolean(settings.darkMode);
+  const isReminderEnabled = Boolean(settings.reminderEnabled);
   const reminderTime = settings.reminderTime || '20:00';
 
   // Format 24h time string like "20:00" to readable "8:00 PM"
@@ -58,18 +58,18 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
   };
 
   return (
-    <div className="flex-1 flex flex-col h-full bg-[#F5F5F5] text-gray-900 select-none overflow-hidden p-4">
-      <div className="bg-white rounded-2xl shadow-[0_4px_12px_rgba(0,0,0,0.06)] border border-gray-100 divide-y divide-gray-100">
+    <div className="flex-1 flex flex-col h-full bg-[#F5F5F5] dark:bg-slate-950 text-gray-900 dark:text-slate-100 select-none overflow-hidden p-4 transition-colors duration-200">
+      <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-[0_4px_12px_rgba(0,0,0,0.06)] dark:shadow-none border border-gray-100 dark:border-slate-800 divide-y divide-gray-100 dark:divide-slate-800 transition-colors duration-200">
         {/* 1. Dark mode (Switch) */}
         <div className="flex items-center justify-between px-4 py-4 min-h-[56px]">
-          <span className="text-base font-medium text-gray-800">Dark mode</span>
+          <span className="text-base font-medium text-gray-800 dark:text-slate-200">Dark mode</span>
           <button
             type="button"
             role="switch"
             aria-checked={isDarkMode}
             onClick={handleToggleDarkMode}
             className={`w-12 h-7 flex items-center rounded-full p-1 transition-colors ${
-              isDarkMode ? 'bg-teal-600' : 'bg-gray-200'
+              isDarkMode ? 'bg-teal-600' : 'bg-gray-200 dark:bg-slate-700'
             }`}
           >
             <div
@@ -82,14 +82,14 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
 
         {/* 2. Daily reminder (Switch) */}
         <div className="flex items-center justify-between px-4 py-4 min-h-[56px]">
-          <span className="text-base font-medium text-gray-800">Daily reminder</span>
+          <span className="text-base font-medium text-gray-800 dark:text-slate-200">Daily reminder</span>
           <button
             type="button"
             role="switch"
             aria-checked={isReminderEnabled}
             onClick={handleToggleReminder}
             className={`w-12 h-7 flex items-center rounded-full p-1 transition-colors ${
-              isReminderEnabled ? 'bg-teal-600' : 'bg-gray-200'
+              isReminderEnabled ? 'bg-teal-600' : 'bg-gray-200 dark:bg-slate-700'
             }`}
           >
             <div
@@ -103,7 +103,7 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
         {/* 3. Reminder time (button, opens time picker — shown only when reminder is ON) */}
         {isReminderEnabled && (
           <div className="flex items-center justify-between px-4 py-4 min-h-[56px]">
-            <span className="text-base font-medium text-gray-800">Reminder time</span>
+            <span className="text-base font-medium text-gray-800 dark:text-slate-200">Reminder time</span>
             <div className="relative">
               <input
                 type="time"
@@ -114,7 +114,7 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
               />
               <button
                 type="button"
-                className="px-3.5 py-2 rounded-xl bg-gray-50 border border-gray-200 text-sm font-semibold text-teal-600 hover:bg-gray-100 transition-colors shadow-2xs"
+                className="px-3.5 py-2 rounded-xl bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-slate-700 text-sm font-semibold text-teal-600 dark:text-teal-400 hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors shadow-2xs"
               >
                 {formatDisplayTime(reminderTime)}
               </button>
@@ -127,7 +127,7 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
           <button
             type="button"
             onClick={() => setShowConfirmReset(true)}
-            className="text-base font-medium text-red-600 hover:text-red-700 text-left py-1"
+            className="text-base font-medium text-red-600 dark:text-rose-400 hover:text-red-700 dark:hover:text-rose-300 text-left py-1 transition-colors"
           >
             Reset all data
           </button>
@@ -136,17 +136,17 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
 
       {/* Reset Confirmation Dialog */}
       {showConfirmReset && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-xs">
-          <div className="bg-white rounded-2xl p-5 max-w-xs w-full space-y-3 shadow-xl border border-gray-100">
-            <h3 className="text-base font-bold text-gray-900">Reset all data?</h3>
-            <p className="text-xs text-gray-600 leading-relaxed">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 dark:bg-black/75 backdrop-blur-xs">
+          <div className="bg-white dark:bg-slate-900 rounded-2xl p-5 max-w-xs w-full space-y-3 shadow-xl border border-gray-100 dark:border-slate-800">
+            <h3 className="text-base font-bold text-gray-900 dark:text-slate-100">Reset all data?</h3>
+            <p className="text-xs text-gray-600 dark:text-slate-400 leading-relaxed">
               This will permanently delete all habits, streak counters, and relapse history. This action cannot be undone.
             </p>
             <div className="flex items-center justify-end gap-2 pt-2">
               <button
                 type="button"
                 onClick={() => setShowConfirmReset(false)}
-                className="px-3.5 py-2 text-xs font-semibold text-gray-600 hover:text-gray-900 rounded-lg hover:bg-gray-100 transition-colors"
+                className="px-3.5 py-2 text-xs font-semibold text-gray-600 dark:text-slate-300 hover:text-gray-900 dark:hover:text-white rounded-lg hover:bg-gray-100 dark:hover:bg-slate-800 transition-colors"
               >
                 Cancel
               </button>

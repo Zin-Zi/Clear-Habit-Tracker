@@ -1,7 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
+import { App as CapacitorApp } from '@capacitor/app';
+import { StatusBar, Style } from '@capacitor/status-bar';
 import { Habit, RelapseLog, AppSettings } from './types/habit';
 import { StorageService } from './services/storage';
-import { AndroidStatusBar } from './components/AndroidStatusBar';
 import { TopAppBar } from './components/TopAppBar';
 import { HomeScreenView } from './components/HomeScreenView';
 import { HabitsManagerScreen } from './components/HabitsManagerScreen';
@@ -17,9 +18,72 @@ export default function App() {
   const [habits, setHabits] = useState<Habit[]>([]);
   const [activeHabitId, setActiveHabitId] = useState<string>('');
   const [relapseLogs, setRelapseLogs] = useState<RelapseLog[]>([]);
-  const [settings, setSettings] = useState<AppSettings>(StorageService.getSettings());
+  const [settings, setSettings] = useState<AppSettings>(() => StorageService.getSettings());
   const [activeScreen, setActiveScreen] = useState<ScreenType>('home');
   const [isPhoneFrame, setIsPhoneFrame] = useState(true);
+  const [showExitToast, setShowExitToast] = useState(false);
+
+  const lastBackPressTimeRef = useRef<number>(0);
+  const toastTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Sync Dark Mode state to HTML documentElement and Capacitor StatusBar
+  useEffect(() => {
+    const isDark = Boolean(settings.darkMode);
+    if (isDark) {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+
+    // Try setting Capacitor native status bar style (Bonus)
+    try {
+      if (typeof StatusBar !== 'undefined' && StatusBar.setStyle) {
+        StatusBar.setStyle({ style: isDark ? Style.Dark : Style.Light }).catch(() => {});
+        if (StatusBar.setBackgroundColor) {
+          StatusBar.setBackgroundColor({ color: isDark ? '#0f172a' : '#ffffff' }).catch(() => {});
+        }
+      }
+    } catch {
+      // Ignored for environments without native plugins
+    }
+  }, [settings.darkMode]);
+
+  // Hardware Back Button Handler via @capacitor/app
+  useEffect(() => {
+    const backButtonListener = CapacitorApp.addListener('backButton', () => {
+      if (activeScreen !== 'home') {
+        // a. Navigate back to Home screen if on another screen
+        setActiveScreen('home');
+      } else {
+        // b & c. Handle double-tap back to exit on Home screen
+        const now = Date.now();
+        if (now - lastBackPressTimeRef.current < 2000) {
+          // Double press within 2s -> exit app
+          CapacitorApp.exitApp();
+        } else {
+          // First press -> record timestamp & show toast
+          lastBackPressTimeRef.current = now;
+          setShowExitToast(true);
+
+          if (toastTimeoutRef.current) {
+            clearTimeout(toastTimeoutRef.current);
+          }
+          // d. Reset toast after 2 seconds
+          toastTimeoutRef.current = setTimeout(() => {
+            setShowExitToast(false);
+          }, 2000);
+        }
+      }
+    });
+
+    // Clean up listener on unmount
+    return () => {
+      if (toastTimeoutRef.current) {
+        clearTimeout(toastTimeoutRef.current);
+      }
+      CapacitorApp.removeAllListeners();
+    };
+  }, [activeScreen]);
 
   // Initial load
   const loadData = () => {
@@ -43,11 +107,15 @@ export default function App() {
 
   const currentHabit = habits.find((h) => h.id === activeHabitId) || habits[0];
 
+  const handleUpdateSettings = (newSettings: AppSettings) => {
+    setSettings(newSettings);
+    StorageService.saveSettings(newSettings);
+  };
+
   const handleSelectHabit = (id: string) => {
     setActiveHabitId(id);
     const updated = { ...settings, activeHabitId: id };
-    setSettings(updated);
-    StorageService.saveSettings(updated);
+    handleUpdateSettings(updated);
   };
 
   const handleAddHabit = (habitData: Omit<Habit, 'id' | 'createdAt'>) => {
@@ -106,21 +174,25 @@ export default function App() {
       : 'Android Kotlin Code';
 
   return (
-    <div className="min-h-screen bg-gray-200 flex flex-col items-center justify-center text-gray-900 font-sans p-0 sm:p-4">
+    <div className="min-h-screen bg-gray-200 dark:bg-slate-950 flex flex-col items-center justify-center text-gray-900 dark:text-slate-100 font-sans p-0 sm:p-4 transition-colors duration-200">
       {/* Device View Mode Switcher (Large screens) */}
-      <div className="fixed top-3 right-3 z-50 hidden lg:flex items-center gap-1.5 bg-white border border-gray-200 p-1 rounded-full shadow-md">
+      <div className="fixed top-3 right-3 z-50 hidden lg:flex items-center gap-1.5 bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-800 p-1 rounded-full shadow-md">
         <button
           onClick={() => setActiveScreen('kotlin_code')}
-          className={`px-3 py-1 rounded-full text-xs font-semibold ${
-            activeScreen === 'kotlin_code' ? 'bg-teal-600 text-white' : 'text-gray-600 hover:text-gray-900'
+          className={`px-3 py-1 rounded-full text-xs font-semibold transition-colors ${
+            activeScreen === 'kotlin_code'
+              ? 'bg-teal-600 text-white'
+              : 'text-gray-600 dark:text-slate-300 hover:text-gray-900 dark:hover:text-white'
           }`}
         >
           View Kotlin Code
         </button>
         <button
           onClick={() => setIsPhoneFrame(true)}
-          className={`p-1.5 rounded-full text-xs font-semibold ${
-            isPhoneFrame && activeScreen !== 'kotlin_code' ? 'bg-teal-600 text-white' : 'text-gray-500 hover:text-gray-900'
+          className={`p-1.5 rounded-full text-xs font-semibold transition-colors ${
+            isPhoneFrame && activeScreen !== 'kotlin_code'
+              ? 'bg-teal-600 text-white'
+              : 'text-gray-500 dark:text-slate-400 hover:text-gray-900 dark:hover:text-white'
           }`}
           title="Phone Bezel"
         >
@@ -131,8 +203,10 @@ export default function App() {
             setIsPhoneFrame(false);
             if (activeScreen === 'kotlin_code') setActiveScreen('home');
           }}
-          className={`p-1.5 rounded-full text-xs font-semibold ${
-            !isPhoneFrame && activeScreen !== 'kotlin_code' ? 'bg-teal-600 text-white' : 'text-gray-500 hover:text-gray-900'
+          className={`p-1.5 rounded-full text-xs font-semibold transition-colors ${
+            !isPhoneFrame && activeScreen !== 'kotlin_code'
+              ? 'bg-teal-600 text-white'
+              : 'text-gray-500 dark:text-slate-400 hover:text-gray-900 dark:hover:text-white'
           }`}
           title="Full App"
         >
@@ -142,15 +216,12 @@ export default function App() {
 
       {/* Main Container - Material 3 Device Frame */}
       <div
-        className={`w-full bg-[#F5F5F5] flex flex-col relative overflow-hidden ${
+        className={`w-full bg-[#F5F5F5] dark:bg-slate-950 flex flex-col relative overflow-hidden transition-colors duration-200 ${
           isPhoneFrame
-            ? 'max-w-[420px] h-[100dvh] sm:h-[840px] sm:rounded-3xl sm:border sm:border-gray-300 sm:shadow-2xl'
-            : 'max-w-xl h-[100dvh] sm:h-[90vh] sm:rounded-2xl sm:border sm:border-gray-300 shadow-xl'
+            ? 'max-w-[420px] h-[100dvh] sm:h-[840px] sm:rounded-3xl sm:border sm:border-gray-300 dark:sm:border-slate-800 sm:shadow-2xl'
+            : 'max-w-xl h-[100dvh] sm:h-[90vh] sm:rounded-2xl sm:border sm:border-gray-300 dark:sm:border-slate-800 shadow-xl'
         }`}
       >
-        {/* Android Status Bar */}
-        <AndroidStatusBar />
-
         {/* Top App Bar with 3-dot overflow menu (Stats, Settings, About) or Back arrow */}
         <TopAppBar
           title={screenTitle}
@@ -162,7 +233,7 @@ export default function App() {
         />
 
         {/* Screen Router with Smooth 300ms Slide+Fade Transition */}
-        <main key={activeScreen} className="flex-1 overflow-hidden flex flex-col animate-screen-enter">
+        <main key={activeScreen} className="flex-1 overflow-hidden flex flex-col animate-screen-enter relative">
           {activeScreen === 'home' && (
             <HomeScreenView
               habits={habits}
@@ -203,10 +274,7 @@ export default function App() {
           {activeScreen === 'settings' && (
             <SettingsScreen
               settings={settings}
-              onUpdateSettings={(s) => {
-                setSettings(s);
-                StorageService.saveSettings(s);
-              }}
+              onUpdateSettings={handleUpdateSettings}
               onDataReload={loadData}
             />
           )}
@@ -227,6 +295,13 @@ export default function App() {
           )}
 
           {activeScreen === 'kotlin_code' && <KotlinCodeViewer />}
+
+          {/* Android Toast Message for Double-Tap Exit */}
+          {showExitToast && (
+            <div className="absolute bottom-20 left-1/2 -translate-x-1/2 z-50 bg-gray-900/90 dark:bg-slate-800/95 text-white dark:text-slate-100 text-xs font-medium px-4 py-2 rounded-full shadow-lg backdrop-blur-sm pointer-events-none transition-all duration-200 animate-fade-in border border-gray-700/50 dark:border-slate-700">
+              Press back again to exit
+            </div>
+          )}
         </main>
       </div>
     </div>

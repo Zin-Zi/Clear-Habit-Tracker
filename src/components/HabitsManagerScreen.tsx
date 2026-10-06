@@ -75,12 +75,12 @@ export const HabitsManagerScreen: React.FC<HabitsManagerScreenProps> = ({
   };
 
   return (
-    <div className="flex-1 flex flex-col justify-between p-4 max-w-md mx-auto w-full bg-[#F5F5F5] text-gray-900 overflow-y-auto">
+    <div className="flex-1 flex flex-col justify-between p-4 max-w-md mx-auto w-full bg-[#F5F5F5] dark:bg-slate-950 text-gray-900 dark:text-slate-100 overflow-y-auto transition-colors duration-200">
       <form onSubmit={handleSave} className="space-y-4">
-        <div className="bg-white rounded-2xl p-5 shadow-[0_4px_12px_rgba(0,0,0,0.06)] border border-gray-100 space-y-4">
-          {/* 1. Name Field (OutlinedTextField, required) */}
+        <div className="bg-white dark:bg-slate-900 rounded-2xl p-5 shadow-[0_4px_12px_rgba(0,0,0,0.06)] dark:shadow-none border border-gray-100 dark:border-slate-800 space-y-4 transition-colors duration-200">
+          {/* 1. Name Field */}
           <div>
-            <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1.5">
+            <label className="block text-xs font-bold text-gray-700 dark:text-slate-300 uppercase tracking-wider mb-1.5">
               Habit Name
             </label>
             <input
@@ -92,15 +92,17 @@ export const HabitsManagerScreen: React.FC<HabitsManagerScreenProps> = ({
                 setName(e.target.value);
                 if (e.target.value.trim()) setNameError(false);
               }}
-              className={`w-full bg-gray-50 border rounded-xl px-4 py-3 text-sm text-gray-900 focus:bg-white focus:outline-none transition-colors ${
-                nameError ? 'border-red-500' : 'border-gray-200 focus:border-teal-600'
+              className={`w-full bg-gray-50 dark:bg-slate-800 border rounded-xl px-4 py-3 text-sm text-gray-900 dark:text-slate-100 focus:bg-white dark:focus:bg-slate-800 focus:outline-none transition-colors ${
+                nameError
+                  ? 'border-red-500'
+                  : 'border-gray-200 dark:border-slate-700 focus:border-teal-600 dark:focus:border-teal-400'
               }`}
             />
           </div>
 
-          {/* 2. Start Date (Single button/picker) */}
+          {/* 2. Start Date */}
           <div>
-            <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1.5">
+            <label className="block text-xs font-bold text-gray-700 dark:text-slate-300 uppercase tracking-wider mb-1.5">
               Start Date
             </label>
             <input
@@ -108,13 +110,13 @@ export const HabitsManagerScreen: React.FC<HabitsManagerScreenProps> = ({
               max={new Date().toISOString().slice(0, 10)}
               value={startDate}
               onChange={(e) => setStartDate(e.target.value)}
-              className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm text-gray-900 focus:bg-white focus:outline-none focus:border-teal-600 cursor-pointer transition-colors"
+              className="w-full bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-xl px-4 py-3 text-sm text-gray-900 dark:text-slate-100 focus:bg-white dark:focus:bg-slate-800 focus:outline-none focus:border-teal-600 dark:focus:border-teal-400 cursor-pointer transition-colors"
             />
           </div>
 
           {/* 3. Color (Row of 6 small color circles) */}
           <div>
-            <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2">
+            <label className="block text-xs font-bold text-gray-700 dark:text-slate-300 uppercase tracking-wider mb-2">
               Accent Color
             </label>
             <div className="flex items-center justify-between px-1">
@@ -125,7 +127,9 @@ export const HabitsManagerScreen: React.FC<HabitsManagerScreenProps> = ({
                   onClick={() => setSelectedColor(color)}
                   style={{ backgroundColor: color }}
                   className={`w-9 h-9 rounded-full transition-transform ${
-                    selectedColor === color ? 'ring-2 ring-gray-900 ring-offset-2 ring-offset-white scale-110 shadow-sm' : ''
+                    selectedColor === color
+                      ? 'ring-2 ring-gray-900 dark:ring-white ring-offset-2 ring-offset-white dark:ring-offset-slate-900 scale-110 shadow-sm'
+                      : ''
                   }`}
                 />
               ))}
@@ -134,7 +138,7 @@ export const HabitsManagerScreen: React.FC<HabitsManagerScreenProps> = ({
 
           {/* 4. Icon (Row of 6 emojis) */}
           <div>
-            <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2">
+            <label className="block text-xs font-bold text-gray-700 dark:text-slate-300 uppercase tracking-wider mb-2">
               Habit Icon
             </label>
             <div className="flex items-center justify-between px-1">
@@ -145,8 +149,8 @@ export const HabitsManagerScreen: React.FC<HabitsManagerScreenProps> = ({
                   onClick={() => setSelectedEmoji(emoji)}
                   className={`w-11 h-11 rounded-xl text-xl flex items-center justify-center transition-all ${
                     selectedEmoji === emoji
-                      ? 'bg-teal-50 border-2 border-teal-600 scale-105 shadow-sm'
-                      : 'bg-gray-50 border border-gray-200 hover:bg-gray-100'
+                      ? 'bg-teal-50 dark:bg-teal-950/50 border-2 border-teal-600 dark:border-teal-400 scale-105 shadow-sm'
+                      : 'bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-slate-700 hover:bg-gray-100 dark:hover:bg-slate-700'
                   }`}
                 >
                   {emoji}
@@ -156,11 +160,11 @@ export const HabitsManagerScreen: React.FC<HabitsManagerScreenProps> = ({
           </div>
         </div>
 
-        {/* 5. Buttons at Bottom (Save & Delete full-width) */}
+        {/* 5. Buttons at Bottom */}
         <div className="pt-2 space-y-2.5">
           <button
             type="submit"
-            className="w-full h-12 rounded-xl bg-teal-600 hover:bg-teal-700 text-white font-bold text-sm flex items-center justify-center shadow-md transition-all active:scale-95"
+            className="w-full h-12 rounded-xl bg-teal-600 hover:bg-teal-700 dark:bg-teal-600 dark:hover:bg-teal-500 text-white font-bold text-sm flex items-center justify-center shadow-md transition-all active:scale-95"
           >
             Save Habit
           </button>
@@ -174,7 +178,7 @@ export const HabitsManagerScreen: React.FC<HabitsManagerScreenProps> = ({
                   onBack();
                 }
               }}
-              className="w-full h-12 rounded-xl bg-white border border-red-200 hover:bg-red-50 text-red-600 font-bold text-sm flex items-center justify-center shadow-sm transition-all active:scale-95"
+              className="w-full h-12 rounded-xl bg-white dark:bg-slate-900 border border-red-200 dark:border-red-900/50 hover:bg-red-50 dark:hover:bg-red-950/30 text-red-600 dark:text-rose-400 font-bold text-sm flex items-center justify-center shadow-sm transition-all active:scale-95"
             >
               Delete Habit
             </button>
@@ -183,7 +187,7 @@ export const HabitsManagerScreen: React.FC<HabitsManagerScreenProps> = ({
           <button
             type="button"
             onClick={onBack}
-            className="w-full py-2 text-xs font-semibold text-gray-500 hover:text-gray-900 text-center"
+            className="w-full py-2 text-xs font-semibold text-gray-500 dark:text-slate-400 hover:text-gray-900 dark:hover:text-white text-center transition-colors"
           >
             Cancel
           </button>
