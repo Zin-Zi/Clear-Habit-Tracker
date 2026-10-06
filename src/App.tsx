@@ -12,6 +12,7 @@ import { SettingsScreen } from './components/SettingsScreen';
 import { AboutScreenView } from './components/AboutScreenView';
 import { KotlinCodeViewer } from './components/KotlinCodeViewer';
 import { Smartphone, Monitor } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 
 export type ScreenType = 'home' | 'stats' | 'settings' | 'about' | 'edit' | 'kotlin_code';
 
@@ -236,77 +237,86 @@ export default function App() {
           onNavigateToAbout={() => setActiveScreen('about')}
         />
 
-        {/* Screen Router with Smooth 300ms Slide+Fade Transition */}
-        <main key={activeScreen} className="flex-1 overflow-hidden flex flex-col animate-screen-enter relative">
-          {activeScreen === 'home' && (
-            <HomeScreenView
-              habits={habits}
-              onSelectHabit={handleSelectHabit}
-              onNavigateToDetails={(id) => {
-                handleSelectHabit(id);
-                setActiveScreen('edit');
-              }}
-              onNavigateToEdit={(h) => {
-                handleSelectHabit(h.id);
-                setActiveScreen('edit');
-              }}
-              onResetHabit={handleResetHabit}
-              onAddNewHabit={() => {
-                setActiveHabitId('');
-                setActiveScreen('edit');
-              }}
-              onDeleteHabit={handleDeleteHabit}
-            />
-          )}
+        {/* Screen Router with Framer Motion 400ms Slide-In from Right + Fade Transition */}
+        <AnimatePresence mode="wait">
+          <motion.main
+            key={activeScreen}
+            initial={{ x: 20, opacity: 0 }}
+            animate={{ x: 0, opacity: 1 }}
+            exit={{ x: -20, opacity: 0 }}
+            transition={{ duration: 0.4, ease: 'easeInOut' }}
+            className="flex-1 overflow-hidden flex flex-col relative"
+          >
+            {activeScreen === 'home' && (
+              <HomeScreenView
+                habits={habits}
+                onSelectHabit={handleSelectHabit}
+                onNavigateToDetails={(id) => {
+                  handleSelectHabit(id);
+                  setActiveScreen('edit');
+                }}
+                onNavigateToEdit={(h) => {
+                  handleSelectHabit(h.id);
+                  setActiveScreen('edit');
+                }}
+                onResetHabit={handleResetHabit}
+                onAddNewHabit={() => {
+                  setActiveHabitId('');
+                  setActiveScreen('edit');
+                }}
+                onDeleteHabit={handleDeleteHabit}
+              />
+            )}
 
-          {activeScreen === 'stats' && (
-            <AnalyticsScreen
-              habit={currentHabit}
-              habits={habits}
-              relapseLogs={relapseLogs}
-              currentStreakDays={
-                currentHabit
-                  ? Math.max(
-                      0,
-                      Math.floor((Date.now() - new Date(currentHabit.startDate).getTime()) / (1000 * 60 * 60 * 24))
-                    )
-                  : 0
-              }
-            />
-          )}
+            {activeScreen === 'stats' && (
+              <AnalyticsScreen
+                habit={currentHabit}
+                habits={habits}
+                relapseLogs={relapseLogs}
+                currentStreakDays={
+                  currentHabit
+                    ? Math.max(
+                        0,
+                        Math.floor((Date.now() - new Date(currentHabit.startDate).getTime()) / (1000 * 60 * 60 * 24))
+                      )
+                    : 0
+                }
+              />
+            )}
 
-          {activeScreen === 'settings' && (
-            <SettingsScreen
-              settings={settings}
-              onUpdateSettings={handleUpdateSettings}
-              onDataReload={loadData}
-            />
-          )}
+            {activeScreen === 'settings' && (
+              <SettingsScreen
+                settings={settings}
+                onUpdateSettings={handleUpdateSettings}
+                onDataReload={loadData}
+              />
+            )}
 
-          {activeScreen === 'about' && <AboutScreenView />}
+            {activeScreen === 'about' && <AboutScreenView />}
 
-          {activeScreen === 'edit' && (
-            <HabitsManagerScreen
-              habits={habits}
-              activeHabitId={activeHabitId}
-              onSelectHabit={handleSelectHabit}
-              onAddHabit={handleAddHabit}
-              onUpdateHabit={handleUpdateHabit}
-              onDeleteHabit={handleDeleteHabit}
-              onReorderHabits={() => {}}
-              onBack={() => setActiveScreen('home')}
-            />
-          )}
+            {activeScreen === 'edit' && (
+              <HabitsManagerScreen
+                habits={habits}
+                activeHabitId={activeHabitId}
+                onSelectHabit={handleSelectHabit}
+                onAddHabit={handleAddHabit}
+                onUpdateHabit={handleUpdateHabit}
+                onDeleteHabit={handleDeleteHabit}
+                onReorderHabits={() => {}}
+                onBack={() => setActiveScreen('home')}
+              />
+            )}
 
-          {activeScreen === 'kotlin_code' && <KotlinCodeViewer />}
+            {activeScreen === 'kotlin_code' && <KotlinCodeViewer />}
 
-          {/* Android Toast Message for Double-Tap Exit */}
-          {showExitToast && (
-            <div className="absolute bottom-20 left-1/2 -translate-x-1/2 z-50 bg-gray-900/90 dark:bg-slate-800/95 text-white dark:text-slate-100 text-xs font-medium px-4 py-2 rounded-full shadow-lg backdrop-blur-sm pointer-events-none transition-all duration-200 animate-fade-in border border-gray-700/50 dark:border-slate-700">
-              Press back again to exit
-            </div>
-          )}
-        </main>
+            {/* Android Toast Message for Double-Tap Exit */}
+            {showExitToast && (
+              <div className="absolute bottom-20 left-1/2 -translate-x-1/2 z-50 bg-gray-900/90 dark:bg-slate-800/95 text-white dark:text-slate-100 text-xs font-medium px-4 py-2 rounded-full shadow-lg backdrop-blur-sm pointer-events-none transition-all duration-200 animate-fade-in border border-gray-700/50 dark:border-slate-700">
+                Press back again to exit
+              </div>
+            )}
+          </motion.main>
+        </AnimatePresence>
       </div>
     </div>
   );
