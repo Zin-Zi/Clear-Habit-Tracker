@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { App as CapacitorApp } from '@capacitor/app';
 import { StatusBar, Style } from '@capacitor/status-bar';
+import { Haptics, ImpactStyle } from '@capacitor/haptics';
 import { Habit, RelapseLog, AppSettings } from './types/habit';
 import { StorageService } from './services/storage';
 import { TopAppBar } from './components/TopAppBar';
@@ -63,6 +64,9 @@ export default function App() {
         } else {
           // First press -> record timestamp & show toast
           lastBackPressTimeRef.current = now;
+          try {
+            Haptics.impact({ style: ImpactStyle.Light });
+          } catch {}
           setShowExitToast(true);
 
           if (toastTimeoutRef.current) {
