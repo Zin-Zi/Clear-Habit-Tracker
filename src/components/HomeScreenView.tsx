@@ -1,5 +1,6 @@
 import React, { useState, useRef } from 'react';
 import { Plus, RotateCcw } from 'lucide-react';
+import { Haptics, ImpactStyle } from '@capacitor/haptics';
 import { Habit } from '../types/habit';
 
 interface HomeScreenViewProps {
@@ -108,6 +109,9 @@ export const HomeScreenView: React.FC<HomeScreenViewProps> = ({
                 onClick={() => onNavigateToEdit(habit)}
                 onContextMenu={(e) => {
                   e.preventDefault();
+                  try {
+                    Haptics.impact({ style: ImpactStyle.Heavy });
+                  } catch {}
                   setHabitToDelete(habit);
                 }}
                 title="Tap to edit, long-press to delete"
@@ -153,6 +157,9 @@ export const HomeScreenView: React.FC<HomeScreenViewProps> = ({
                     type="button"
                     onClick={(e) => {
                       e.stopPropagation();
+                      try {
+                        Haptics.impact({ style: ImpactStyle.Medium });
+                      } catch {}
                       setHabitToReset(habit);
                     }}
                     aria-label={`Reset streak for ${habit.name}`}
@@ -171,7 +178,12 @@ export const HomeScreenView: React.FC<HomeScreenViewProps> = ({
       {/* Floating Action Button (FAB) */}
       <div className="absolute bottom-6 right-6 z-20">
         <button
-          onClick={onAddNewHabit}
+          onClick={() => {
+            try {
+              Haptics.impact({ style: ImpactStyle.Light });
+            } catch {}
+            onAddNewHabit();
+          }}
           aria-label="Add new habit"
           className={`w-14 h-14 rounded-full bg-[#00897B] hover:bg-[#00796B] dark:bg-teal-600 dark:hover:bg-teal-500 text-white flex items-center justify-center shadow-lg transition-all duration-200 active:scale-90 ${
             isScrollingDown ? 'scale-90 shadow-md opacity-90' : 'scale-100 shadow-lg opacity-100'

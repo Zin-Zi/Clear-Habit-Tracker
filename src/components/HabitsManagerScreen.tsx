@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Haptics, NotificationType } from '@capacitor/haptics';
 import { Habit } from '../types/habit';
 
 interface HabitsManagerScreenProps {
@@ -51,6 +52,10 @@ export const HabitsManagerScreen: React.FC<HabitsManagerScreenProps> = ({
       setNameError(true);
       return;
     }
+
+    try {
+      Haptics.notification({ type: NotificationType.Success });
+    } catch {}
 
     if (isEditing && existingHabit) {
       onUpdateHabit({
