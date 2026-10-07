@@ -48,7 +48,7 @@ export const TopAppBar: React.FC<TopAppBarProps> = ({
             {title}
           </h1>
           {title === 'Momentum' && (
-            <span className="text-[10px] font-black tracking-widest uppercase px-1.5 py-0.5 rounded-md bg-gradient-to-r from-[#00897B] to-emerald-500 text-white shadow-xs leading-none mt-0.5">
+            <span className="text-[8px] font-extrabold tracking-wider uppercase px-1.5 py-0.5 rounded-full border border-[#00897B]/30 dark:border-teal-400/30 bg-[#00897B]/10 dark:bg-teal-400/10 text-[#00897B] dark:text-teal-300 leading-none mt-1 select-none">
               PRO
             </span>
           )}

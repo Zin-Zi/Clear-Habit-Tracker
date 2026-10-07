@@ -14,16 +14,26 @@ interface HabitsManagerScreenProps {
   onBack: () => void;
 }
 
-const SIX_COLORS = [
+const COLOR_OPTIONS = [
   '#00897B', // Soft Teal
-  '#2563EB', // Vibrant Blue
+  '#10B981', // Emerald Green
+  '#2563EB', // Royal Blue
   '#0284C7', // Sky Blue
+  '#6366F1', // Indigo
   '#7C3AED', // Deep Violet
-  '#D97706', // Warm Amber
+  '#EC4899', // Pink
   '#E11D48', // Rose
+  '#F97316', // Bright Orange
+  '#D97706', // Warm Amber
+  '#84CC16', // Lime Green
+  '#64748B', // Slate Gray
 ];
 
-const SIX_EMOJIS = ['⚡', '🚿', '🧘', '📵', '🏋️', '🌱'];
+const EMOJI_OPTIONS = [
+  '⚡', '🚿', '🧘', '📵', '🏋️', '🌱',
+  '📚', '💧', '🏃', '🚴', '🍏', '🛌',
+  '💻', '🎨', '🎯', '☀️', '🧠', '🔥',
+];
 
 const toLocalISOString = (isoString?: string) => {
   const date = isoString ? new Date(isoString) : new Date();
@@ -48,8 +58,8 @@ export const HabitsManagerScreen: React.FC<HabitsManagerScreenProps> = ({
   const [startDateTime, setStartDateTime] = useState(
     toLocalISOString(existingHabit?.startDate)
   );
-  const [selectedColor, setSelectedColor] = useState(existingHabit?.color || SIX_COLORS[0]);
-  const [selectedEmoji, setSelectedEmoji] = useState(existingHabit?.icon || SIX_EMOJIS[0]);
+  const [selectedColor, setSelectedColor] = useState(existingHabit?.color || COLOR_OPTIONS[0]);
+  const [selectedEmoji, setSelectedEmoji] = useState(existingHabit?.icon || EMOJI_OPTIONS[0]);
   const [nameError, setNameError] = useState(false);
   const [showConfirmDelete, setShowConfirmDelete] = useState(false);
 
@@ -88,28 +98,35 @@ export const HabitsManagerScreen: React.FC<HabitsManagerScreenProps> = ({
   };
 
   return (
-    <div className="flex-1 flex flex-col justify-end p-0 sm:p-4 max-w-md mx-auto w-full bg-[#F2F4F7] dark:bg-[#0F172A] text-gray-900 dark:text-slate-100 overflow-y-auto transition-colors duration-200">
-      {/* Bottom-Sheet Style Card Panel */}
+    <div className="fixed inset-0 z-50 flex flex-col bg-[#F2F4F7] dark:bg-[#0F172A] text-gray-900 dark:text-slate-100 overflow-y-auto transition-colors duration-200">
+      {/* Full-Screen Container */}
       <motion.div
-        initial={{ y: 40, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        transition={{ type: 'spring', stiffness: 400, damping: 30 }}
-        className="glass-card rounded-t-3xl sm:rounded-3xl p-6 shadow-2xl border border-white/60 dark:border-slate-800 space-y-5"
+        initial={{ opacity: 0, scale: 0.98 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ duration: 0.2 }}
+        className="flex-1 flex flex-col max-w-md mx-auto w-full min-h-screen p-5 space-y-6"
       >
-        {/* Grab Handle */}
-        <div className="w-12 h-1 bg-gray-200 dark:bg-slate-700 rounded-full mx-auto" />
-
-        {/* Header Title */}
-        <div>
-          <h2 className="text-xl font-black text-gray-900 dark:text-slate-100">
-            {isEditing ? 'Edit Habit' : 'Create Habit'}
-          </h2>
-          <p className="text-xs text-gray-500 dark:text-slate-400 mt-0.5">
-            {isEditing ? 'Update habit details and start time.' : 'Set up a new habit to start your momentum.'}
-          </p>
+        {/* Full-Screen Top Navigation Bar */}
+        <div className="flex items-center justify-between pb-2 border-b border-gray-200/60 dark:border-slate-800">
+          <div>
+            <h2 className="text-2xl font-black text-gray-900 dark:text-slate-100">
+              {isEditing ? 'Edit Habit' : 'Create Habit'}
+            </h2>
+            <p className="text-xs text-gray-500 dark:text-slate-400 mt-0.5">
+              {isEditing ? 'Update habit details and streak start time.' : 'Set up a new habit to build momentum.'}
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={onBack}
+            className="w-9 h-9 rounded-full flex items-center justify-center bg-gray-200/60 dark:bg-slate-800 text-gray-600 dark:text-slate-300 hover:text-gray-900 dark:hover:text-white transition-colors"
+          >
+            ✕
+          </button>
         </div>
 
-        <form onSubmit={handleSave} className="space-y-4">
+        <form onSubmit={handleSave} className="space-y-5 flex-1 flex flex-col justify-between">
+          <div className="space-y-5">
           {/* 1. Habit Name */}
           <div>
             <label className="block text-xs font-bold text-gray-700 dark:text-slate-300 uppercase tracking-wider mb-1.5">
@@ -146,49 +163,50 @@ export const HabitsManagerScreen: React.FC<HabitsManagerScreenProps> = ({
             />
           </div>
 
-          {/* 3. Accent Color */}
+          {/* 3. Accent Color Grid */}
           <div>
-            <label className="block text-xs font-bold text-gray-700 dark:text-slate-300 uppercase tracking-wider mb-2">
+            <label className="block text-xs font-bold text-gray-700 dark:text-slate-300 uppercase tracking-wider mb-2.5">
               Color Theme
             </label>
-            <div className="flex items-center justify-between px-1">
-              {SIX_COLORS.map((color) => (
+            <div className="grid grid-cols-6 gap-3 px-1">
+              {COLOR_OPTIONS.map((color) => (
                 <button
                   type="button"
                   key={color}
                   onClick={() => setSelectedColor(color)}
                   style={{ backgroundColor: color }}
-                  className={`w-9 h-9 rounded-full transition-transform ${
+                  className={`w-9 h-9 rounded-full justify-self-center transition-all ${
                     selectedColor === color
-                      ? 'ring-2 ring-gray-900 dark:ring-white ring-offset-2 ring-offset-white dark:ring-offset-slate-900 scale-110 shadow-sm'
-                      : ''
+                      ? 'ring-3 ring-[#00897B] dark:ring-teal-400 ring-offset-2 ring-offset-[#F2F4F7] dark:ring-offset-[#0F172A] scale-110 shadow-md'
+                      : 'opacity-85 hover:opacity-100'
                   }`}
                 />
               ))}
             </div>
           </div>
 
-          {/* 4. Habit Icon */}
+          {/* 4. Habit Icon Grid */}
           <div>
-            <label className="block text-xs font-bold text-gray-700 dark:text-slate-300 uppercase tracking-wider mb-2">
+            <label className="block text-xs font-bold text-gray-700 dark:text-slate-300 uppercase tracking-wider mb-2.5">
               Icon
             </label>
-            <div className="flex items-center justify-between px-1">
-              {SIX_EMOJIS.map((emoji) => (
+            <div className="grid grid-cols-6 gap-2.5 max-h-48 overflow-y-auto px-1 py-1">
+              {EMOJI_OPTIONS.map((emoji) => (
                 <button
                   type="button"
                   key={emoji}
                   onClick={() => setSelectedEmoji(emoji)}
-                  className={`w-11 h-11 rounded-2xl text-xl flex items-center justify-center transition-all ${
+                  className={`w-11 h-11 rounded-2xl text-xl flex items-center justify-center justify-self-center transition-all ${
                     selectedEmoji === emoji
                       ? 'bg-[#00897B]/15 dark:bg-teal-950/60 border-2 border-[#00897B] dark:border-teal-400 scale-105 shadow-xs'
-                      : 'bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-slate-700 hover:bg-gray-100 dark:hover:bg-slate-700'
+                      : 'bg-white/80 dark:bg-slate-800/80 border border-gray-200 dark:border-slate-700 hover:bg-gray-100 dark:hover:bg-slate-700'
                   }`}
                 >
                   {emoji}
                 </button>
               ))}
             </div>
+          </div>
           </div>
 
           {/* Action Buttons */}
