@@ -94,6 +94,21 @@
   }
 }
 
+@keyframes breathingGlow {
+  0%, 100% {
+    opacity: 0.15;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.35;
+    transform: scale(1.08);
+  }
+}
+
+.animate-breathing-glow {
+  animation: breathingGlow 6s ease-in-out infinite;
+}
+
 .animate-text-shimmer {
   background: linear-gradient(
     90deg,

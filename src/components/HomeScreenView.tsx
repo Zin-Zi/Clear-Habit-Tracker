@@ -102,9 +102,9 @@ export const HomeScreenView: React.FC<HomeScreenViewProps> = ({
 
   return (
     <div className="flex-1 flex flex-col h-full overflow-hidden bg-[#F2F4F7] dark:bg-[#0F172A] text-gray-900 dark:text-slate-100 relative transition-colors duration-200">
-      {/* Background Soft Glow Spots */}
-      <div className="absolute -top-24 -left-24 w-80 h-80 bg-[#00897B]/15 dark:bg-teal-500/10 rounded-full blur-3xl pointer-events-none z-0" />
-      <div className="absolute top-1/2 -right-24 w-80 h-80 bg-emerald-500/10 dark:bg-teal-400/10 rounded-full blur-3xl pointer-events-none z-0" />
+      {/* Animated Background Soft Breathing Glow Spots */}
+      <div className="absolute -top-24 -left-24 w-80 h-80 bg-[#00897B]/20 dark:bg-teal-400/15 rounded-full blur-3xl pointer-events-none z-0 animate-breathing-glow" />
+      <div className="absolute top-1/2 -right-24 w-80 h-80 bg-emerald-500/15 dark:bg-teal-400/10 rounded-full blur-3xl pointer-events-none z-0 animate-breathing-glow" style={{ animationDelay: '3s' }} />
 
       {/* Empty State */}
       {habits.length === 0 ? (
@@ -172,9 +172,9 @@ export const HomeScreenView: React.FC<HomeScreenViewProps> = ({
                   }}
                   title="Tap to edit, long-press to delete"
                 >
-                  {/* Subtle Colored Accent Bar on Left Edge */}
+                  {/* Softened Muted Colored Accent Bar on Left Edge */}
                   <div
-                    className="absolute left-0 top-3 bottom-3 w-1 rounded-r-full transition-all"
+                    className="absolute left-0 top-3.5 bottom-3.5 w-1 rounded-r-full transition-all opacity-60 dark:opacity-75"
                     style={{ backgroundColor: habit.color || '#00897B' }}
                   />
 
