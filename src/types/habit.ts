@@ -11,6 +11,7 @@ export interface Habit {
   isArchived?: boolean;
   pledge?: string;
   createdAt: string;
+  completedDates?: string[];
 }
 
 export interface RelapseLog {

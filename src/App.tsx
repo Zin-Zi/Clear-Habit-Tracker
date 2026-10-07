@@ -167,7 +167,7 @@ export default function App() {
 
   const screenTitle =
     activeScreen === 'home'
-      ? 'NoFap Counter'
+      ? 'Momentum'
       : activeScreen === 'stats'
       ? 'Stats'
       : activeScreen === 'settings'
@@ -260,6 +260,7 @@ export default function App() {
                   setActiveScreen('edit');
                 }}
                 onResetHabit={handleResetHabit}
+                onUpdateHabit={handleUpdateHabit}
                 onAddNewHabit={() => {
                   setActiveHabitId('');
                   setActiveScreen('edit');

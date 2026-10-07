@@ -138,9 +138,9 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
       {showConfirmReset && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 dark:bg-black/75 backdrop-blur-xs">
           <div className="bg-white dark:bg-slate-900 rounded-2xl p-5 max-w-xs w-full space-y-3 shadow-xl border border-gray-100 dark:border-slate-800">
-            <h3 className="text-base font-bold text-gray-900 dark:text-slate-100">Reset all data?</h3>
+            <h3 className="text-base font-bold text-gray-900 dark:text-slate-100">Are you sure?</h3>
             <p className="text-xs text-gray-600 dark:text-slate-400 leading-relaxed">
-              This will permanently delete all habits, streak counters, and relapse history. This action cannot be undone.
+              This will erase all your progress.
             </p>
             <div className="flex items-center justify-end gap-2 pt-2">
               <button

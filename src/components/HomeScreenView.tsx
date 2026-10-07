@@ -1,5 +1,5 @@
 import React, { useState, useRef } from 'react';
-import { Plus, RotateCcw } from 'lucide-react';
+import { Plus, RotateCcw, Check } from 'lucide-react';
 import { Haptics, ImpactStyle } from '@capacitor/haptics';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Habit } from '../types/habit';
@@ -10,6 +10,7 @@ interface HomeScreenViewProps {
   onNavigateToDetails: (id: string) => void;
   onNavigateToEdit: (habit: Habit) => void;
   onResetHabit: (habit: Habit) => void;
+  onUpdateHabit?: (habit: Habit) => void;
   onAddNewHabit: () => void;
   onDeleteHabit?: (id: string) => void;
 }
@@ -18,6 +19,7 @@ export const HomeScreenView: React.FC<HomeScreenViewProps> = ({
   habits,
   onNavigateToEdit,
   onResetHabit,
+  onUpdateHabit,
   onAddNewHabit,
   onDeleteHabit,
 }) => {
@@ -40,6 +42,39 @@ export const HomeScreenView: React.FC<HomeScreenViewProps> = ({
       setIsScrollingDown(false);
     }
     lastScrollTop.current = currentScrollTop;
+  };
+
+  const getTodayStr = () => {
+    const d = new Date();
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  };
+
+  const handleToggleMarkDay = (e: React.MouseEvent, habit: Habit) => {
+    e.stopPropagation();
+    try {
+      Haptics.impact({ style: ImpactStyle.Medium });
+    } catch {}
+
+    const todayStr = getTodayStr();
+    const completedSet = new Set(habit.completedDates || []);
+    if (completedSet.has(todayStr)) {
+      completedSet.delete(todayStr);
+    } else {
+      completedSet.add(todayStr);
+    }
+
+    const updatedDates = Array.from(completedSet);
+    const updatedHabit: Habit = {
+      ...habit,
+      completedDates: updatedDates,
+    };
+
+    if (onUpdateHabit) {
+      onUpdateHabit(updatedHabit);
+    }
   };
 
   const handleConfirmReset = (habit: Habit) => {
@@ -190,6 +225,28 @@ export const HomeScreenView: React.FC<HomeScreenViewProps> = ({
                         {liveDays === 1 ? 'day' : 'days'}
                       </div>
                     </div>
+
+                    {/* Mark Day Checkmark Button */}
+                    {(() => {
+                      const todayStr = getTodayStr();
+                      const isCompletedToday = (habit.completedDates || []).includes(todayStr);
+                      return (
+                        <motion.button
+                          type="button"
+                          whileTap={{ scale: 0.85 }}
+                          onClick={(e) => handleToggleMarkDay(e, habit)}
+                          aria-label={`Mark habit ${habit.name} completed today`}
+                          className={`w-10 h-10 rounded-full flex items-center justify-center transition-all ${
+                            isCompletedToday
+                              ? 'bg-[#00897B] text-white shadow-xs'
+                              : 'text-gray-400 dark:text-slate-500 hover:text-[#00897B] dark:hover:text-teal-400 hover:bg-[#00897B]/10 dark:hover:bg-teal-400/10'
+                          }`}
+                          title={isCompletedToday ? 'Completed today! Tap to undo' : 'Mark completed today'}
+                        >
+                          <Check className="w-4 h-4 stroke-[2.5]" />
+                        </motion.button>
+                      );
+                    })()}
 
                     {/* Reset Icon Button */}
                     <motion.button
