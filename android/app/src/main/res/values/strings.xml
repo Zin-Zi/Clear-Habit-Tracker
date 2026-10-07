@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Clear</string>
+    <string name="title_activity_main">Clear</string>
+    <string name="package_name">com.example.clear</string>
+    <string name="custom_url_scheme">com.example.clear</string>
+</resources>
