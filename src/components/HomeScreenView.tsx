@@ -24,6 +24,7 @@ export const HomeScreenView: React.FC<HomeScreenViewProps> = ({
   const [habitToDelete, setHabitToDelete] = useState<Habit | null>(null);
   const [habitToReset, setHabitToReset] = useState<Habit | null>(null);
   const [resettingId, setResettingId] = useState<string | null>(null);
+  const [activeRippleId, setActiveRippleId] = useState<string | null>(null);
 
   // FAB scroll behavior: shrink on scroll down, expand on scroll up
   const [isScrollingDown, setIsScrollingDown] = useState(false);
@@ -48,11 +49,17 @@ export const HomeScreenView: React.FC<HomeScreenViewProps> = ({
     }
 
     setResettingId(habit.id);
+    setActiveRippleId(habit.id);
+
     setTimeout(() => {
       onResetHabit(habit);
       setResettingId(null);
       setHabitToReset(null);
-    }, 300);
+    }, 250);
+
+    setTimeout(() => {
+      setActiveRippleId(null);
+    }, 600);
   };
 
   const handleConfirmDelete = (habit: Habit) => {
@@ -67,9 +74,9 @@ export const HomeScreenView: React.FC<HomeScreenViewProps> = ({
       {/* Empty State */}
       {habits.length === 0 ? (
         <motion.div
-          initial={{ opacity: 0, scale: 0.9 }}
+          initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
-          transition={{ type: 'spring', stiffness: 300, damping: 25 }}
+          transition={{ duration: 0.2 }}
           className="flex-1 flex flex-col items-center justify-center p-6 text-center"
         >
           <div className="w-16 h-16 bg-white dark:bg-slate-900 rounded-2xl shadow-md border border-gray-100 dark:border-slate-800 flex items-center justify-center text-2xl mb-4 text-[#00897B] dark:text-teal-400">
@@ -80,7 +87,7 @@ export const HomeScreenView: React.FC<HomeScreenViewProps> = ({
             Start tracking your habits and build long-lasting streaks.
           </p>
           <motion.button
-            whileTap={{ scale: 0.95 }}
+            whileTap={{ scale: 0.96 }}
             onClick={onAddNewHabit}
             className="w-full max-w-xs h-12 rounded-xl bg-[#00897B] hover:bg-[#00796B] dark:bg-teal-600 dark:hover:bg-teal-500 text-white font-semibold text-sm flex items-center justify-center gap-2 shadow-md transition-colors"
           >
@@ -89,7 +96,7 @@ export const HomeScreenView: React.FC<HomeScreenViewProps> = ({
           </motion.button>
         </motion.div>
       ) : (
-        /* Modern Cards Habit List with Staggered Framer Motion Animations */
+        /* Modern Cards Habit List with Fast Mobile Framer Motion Animations */
         <div
           ref={scrollContainerRef}
           onScroll={handleScroll}
@@ -101,28 +108,23 @@ export const HomeScreenView: React.FC<HomeScreenViewProps> = ({
               const liveDays = Math.max(0, Math.floor((Date.now() - start) / (1000 * 60 * 60 * 24)));
               const bestStreak = Math.max(habit.bestStreakDays, liveDays);
               const isResetting = resettingId === habit.id;
+              const hasRipple = activeRippleId === habit.id;
 
               return (
                 <motion.div
                   key={habit.id}
                   layout
-                  initial={{ opacity: 0, y: 20 }}
+                  initial={{ opacity: 0, y: 12 }}
                   animate={{ opacity: 1, y: 0 }}
-                  exit={{
-                    x: [0, -8, 8, -8, 8, 0],
-                    opacity: 0,
-                    height: 0,
-                    marginBottom: 0,
-                    transition: { duration: 0.35 },
-                  }}
+                  exit={{ opacity: 0, scale: 0.9, height: 0, marginBottom: 0 }}
                   transition={{
                     type: 'spring',
-                    stiffness: 350,
-                    damping: 25,
-                    delay: index * 0.08,
+                    stiffness: 450,
+                    damping: 30,
+                    delay: index * 0.04,
                   }}
-                  whileTap={{ scale: 0.96 }}
-                  className="bg-white dark:bg-slate-900 rounded-2xl p-4 shadow-[0_4px_12px_rgba(0,0,0,0.06)] dark:shadow-none border border-gray-100 dark:border-slate-800 flex items-center justify-between transition-shadow select-none cursor-pointer hover:shadow-[0_6px_16px_rgba(0,0,0,0.08)] dark:hover:border-slate-700"
+                  whileTap={{ scale: 0.97 }}
+                  className="bg-white dark:bg-slate-900 rounded-2xl p-4 shadow-[0_4px_12px_rgba(0,0,0,0.06)] dark:shadow-none border border-gray-100 dark:border-slate-800 flex items-center justify-between transition-shadow select-none cursor-pointer hover:shadow-[0_6px_16px_rgba(0,0,0,0.08)] dark:hover:border-slate-700 relative overflow-hidden"
                   onClick={() => onNavigateToEdit(habit)}
                   onContextMenu={(e) => {
                     e.preventDefault();
@@ -133,8 +135,21 @@ export const HomeScreenView: React.FC<HomeScreenViewProps> = ({
                   }}
                   title="Tap to edit, long-press to delete"
                 >
+                  {/* Water / Ripple Effect Wave Overlay */}
+                  <AnimatePresence>
+                    {hasRipple && (
+                      <motion.div
+                        initial={{ scale: 0, opacity: 0.8 }}
+                        animate={{ scale: 3.5, opacity: 0 }}
+                        exit={{ opacity: 0 }}
+                        transition={{ duration: 0.55, ease: 'easeOut' }}
+                        className="absolute inset-0 m-auto w-24 h-24 rounded-full bg-[#00897B]/25 dark:bg-teal-400/35 border-2 border-[#00897B]/50 dark:border-teal-300/60 pointer-events-none z-10"
+                      />
+                    )}
+                  </AnimatePresence>
+
                   {/* Left side: Habit icon, name & Best streak */}
-                  <div className="flex items-center gap-3.5 flex-1 min-w-0 pr-2">
+                  <div className="flex items-center gap-3.5 flex-1 min-w-0 pr-2 z-0">
                     <div
                       className="w-11 h-11 rounded-xl flex items-center justify-center text-xl shrink-0 transition-transform"
                       style={{ backgroundColor: `${habit.color}20`, color: habit.color }}
@@ -151,22 +166,22 @@ export const HomeScreenView: React.FC<HomeScreenViewProps> = ({
                     </div>
                   </div>
 
-                  {/* Right side: Day count with count-up scale pulse & reset button */}
-                  <div className="flex items-center gap-3.5 shrink-0 pl-2">
+                  {/* Right side: Day count & reset button */}
+                  <div className="flex items-center gap-3.5 shrink-0 pl-2 z-0">
                     <div className="text-right overflow-hidden py-1">
                       <AnimatePresence mode="wait">
                         <motion.div
                           key={`${habit.id}-${isResetting ? 0 : liveDays}`}
-                          initial={isResetting ? { y: -16, opacity: 0 } : { scale: 0.8, opacity: 0 }}
+                          initial={{ opacity: 0, y: isResetting ? -12 : -8 }}
                           animate={{
-                            scale: [1, 1.25, 1],
-                            color: isResetting ? ['#EF4444', '#00897B'] : ['#00897B', '#111827'],
+                            scale: isResetting ? [1, 1.2, 1] : 1,
+                            color: isResetting ? '#00897B' : undefined,
                             opacity: 1,
                             y: 0,
                           }}
-                          exit={{ y: 16, opacity: 0 }}
-                          transition={{ duration: 0.3, ease: 'easeOut' }}
-                          className="text-[32px] font-black leading-none tracking-tight"
+                          exit={{ y: 12, opacity: 0 }}
+                          transition={{ duration: 0.18, ease: 'easeOut' }}
+                          className="text-[32px] font-black leading-none tracking-tight text-gray-900 dark:text-slate-100"
                         >
                           {isResetting ? 0 : liveDays}
                         </motion.div>
@@ -193,7 +208,7 @@ export const HomeScreenView: React.FC<HomeScreenViewProps> = ({
                     >
                       <motion.div
                         animate={isResetting ? { rotate: 360 } : { rotate: 0 }}
-                        transition={{ duration: 0.4, ease: 'easeInOut' }}
+                        transition={{ duration: 0.25, ease: 'easeInOut' }}
                       >
                         <RotateCcw className="w-4 h-4" />
                       </motion.div>
@@ -209,18 +224,9 @@ export const HomeScreenView: React.FC<HomeScreenViewProps> = ({
       {/* Floating Action Button (FAB) */}
       <div className="absolute bottom-6 right-6 z-20">
         <motion.button
-          animate={{
-            scale: isScrollingDown ? 0.9 : [1, 1.04, 1],
-          }}
-          transition={{
-            scale: {
-              repeat: isScrollingDown ? 0 : Infinity,
-              repeatType: 'reverse',
-              duration: 2.5,
-              ease: 'easeInOut',
-            },
-          }}
-          whileTap={{ scale: 0.9 }}
+          animate={{ scale: isScrollingDown ? 0.9 : 1 }}
+          transition={{ duration: 0.18 }}
+          whileTap={{ scale: 0.92 }}
           onClick={() => {
             try {
               Haptics.impact({ style: ImpactStyle.Light });
@@ -230,7 +236,7 @@ export const HomeScreenView: React.FC<HomeScreenViewProps> = ({
           aria-label="Add new habit"
           className="w-14 h-14 rounded-full bg-[#00897B] hover:bg-[#00796B] dark:bg-teal-600 dark:hover:bg-teal-500 text-white flex items-center justify-center shadow-lg transition-colors group"
         >
-          <motion.div whileHover={{ rotate: 90 }} transition={{ duration: 0.2 }}>
+          <motion.div whileHover={{ rotate: 90 }} transition={{ duration: 0.15 }}>
             <Plus className="w-6 h-6 stroke-[2.5]" />
           </motion.div>
         </motion.button>
@@ -243,13 +249,14 @@ export const HomeScreenView: React.FC<HomeScreenViewProps> = ({
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
+            transition={{ duration: 0.15 }}
             className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 dark:bg-black/75 backdrop-blur-xs"
           >
             <motion.div
-              initial={{ scale: 0.9, opacity: 0, y: 10 }}
-              animate={{ scale: 1, opacity: 1, y: 0 }}
-              exit={{ scale: 0.9, opacity: 0, y: 10 }}
-              transition={{ type: 'spring', stiffness: 400, damping: 30 }}
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              transition={{ duration: 0.15 }}
               className="bg-white dark:bg-slate-900 rounded-2xl p-5 max-w-xs w-full space-y-3 shadow-xl border border-gray-100 dark:border-slate-800"
             >
               <h3 className="text-base font-bold text-gray-900 dark:text-slate-100">Reset "{habitToReset.name}"?</h3>
@@ -285,13 +292,14 @@ export const HomeScreenView: React.FC<HomeScreenViewProps> = ({
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
+            transition={{ duration: 0.15 }}
             className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 dark:bg-black/75 backdrop-blur-xs"
           >
             <motion.div
-              initial={{ scale: 0.9, opacity: 0, y: 10 }}
-              animate={{ scale: 1, opacity: 1, y: 0 }}
-              exit={{ scale: 0.9, opacity: 0, y: 10 }}
-              transition={{ type: 'spring', stiffness: 400, damping: 30 }}
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              transition={{ duration: 0.15 }}
               className="bg-white dark:bg-slate-900 rounded-2xl p-5 max-w-xs w-full space-y-3 shadow-xl border border-gray-100 dark:border-slate-800"
             >
               <h3 className="text-base font-bold text-gray-900 dark:text-slate-100">Delete "{habitToDelete.name}"?</h3>

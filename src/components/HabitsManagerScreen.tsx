@@ -24,6 +24,14 @@ const SIX_COLORS = [
 
 const SIX_EMOJIS = ['🛡️', '🚿', '🧘', '📵', '🏋️', '⚡'];
 
+const toLocalISOString = (isoString?: string) => {
+  const date = isoString ? new Date(isoString) : new Date();
+  if (isNaN(date.getTime())) return new Date().toISOString().slice(0, 16);
+  const tzOffset = date.getTimezoneOffset() * 60000;
+  const localDate = new Date(date.getTime() - tzOffset);
+  return localDate.toISOString().slice(0, 16);
+};
+
 export const HabitsManagerScreen: React.FC<HabitsManagerScreenProps> = ({
   habits,
   activeHabitId,
@@ -36,10 +44,8 @@ export const HabitsManagerScreen: React.FC<HabitsManagerScreenProps> = ({
   const isEditing = Boolean(existingHabit);
 
   const [name, setName] = useState(existingHabit?.name || '');
-  const [startDate, setStartDate] = useState(
-    existingHabit?.startDate
-      ? new Date(existingHabit.startDate).toISOString().slice(0, 10)
-      : new Date().toISOString().slice(0, 10)
+  const [startDateTime, setStartDateTime] = useState(
+    toLocalISOString(existingHabit?.startDate)
   );
   const [selectedColor, setSelectedColor] = useState(existingHabit?.color || SIX_COLORS[0]);
   const [selectedEmoji, setSelectedEmoji] = useState(existingHabit?.icon || SIX_EMOJIS[0]);
@@ -63,7 +69,7 @@ export const HabitsManagerScreen: React.FC<HabitsManagerScreenProps> = ({
         name: name.trim(),
         icon: selectedEmoji,
         color: selectedColor,
-        startDate: new Date(startDate).toISOString(),
+        startDate: new Date(startDateTime).toISOString(),
       });
     } else {
       onAddHabit({
@@ -71,7 +77,7 @@ export const HabitsManagerScreen: React.FC<HabitsManagerScreenProps> = ({
         description: '',
         icon: selectedEmoji,
         color: selectedColor,
-        startDate: new Date(startDate).toISOString(),
+        startDate: new Date(startDateTime).toISOString(),
         bestStreakDays: 0,
         targetDays: 90,
         order: habits.length,
@@ -106,16 +112,16 @@ export const HabitsManagerScreen: React.FC<HabitsManagerScreenProps> = ({
             />
           </div>
 
-          {/* 2. Start Date */}
+          {/* 2. Start Date & Time */}
           <div>
             <label className="block text-xs font-bold text-gray-700 dark:text-slate-300 uppercase tracking-wider mb-1.5">
-              Start Date
+              Streak Start Date & Time
             </label>
             <input
-              type="date"
-              max={new Date().toISOString().slice(0, 10)}
-              value={startDate}
-              onChange={(e) => setStartDate(e.target.value)}
+              type="datetime-local"
+              max={toLocalISOString()}
+              value={startDateTime}
+              onChange={(e) => setStartDateTime(e.target.value)}
               className="w-full bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-xl px-4 py-3 text-sm text-gray-900 dark:text-slate-100 focus:bg-white dark:focus:bg-slate-800 focus:outline-none focus:border-teal-600 dark:focus:border-teal-400 cursor-pointer transition-colors"
             />
           </div>
