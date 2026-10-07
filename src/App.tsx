@@ -237,14 +237,14 @@ export default function App() {
           onNavigateToAbout={() => setActiveScreen('about')}
         />
 
-        {/* Screen Router with Framer Motion 400ms Slide-In from Right + Fade Transition */}
+        {/* Screen Router with Fast Mobile 200ms Slide-In from Right + Fade Transition */}
         <AnimatePresence mode="wait">
           <motion.main
             key={activeScreen}
-            initial={{ x: 20, opacity: 0 }}
+            initial={{ x: 14, opacity: 0 }}
             animate={{ x: 0, opacity: 1 }}
-            exit={{ x: -20, opacity: 0 }}
-            transition={{ duration: 0.4, ease: 'easeInOut' }}
+            exit={{ x: -14, opacity: 0 }}
+            transition={{ duration: 0.18, ease: 'easeInOut' }}
             className="flex-1 overflow-hidden flex flex-col relative"
           >
             {activeScreen === 'home' && (
