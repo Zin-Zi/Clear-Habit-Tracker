@@ -24,6 +24,7 @@ export default function App() {
   const [activeScreen, setActiveScreen] = useState<ScreenType>('home');
   const [isPhoneFrame, setIsPhoneFrame] = useState(true);
   const [showExitToast, setShowExitToast] = useState(false);
+  const [isAppReady, setIsAppReady] = useState(false);
 
   const lastBackPressTimeRef = useRef<number>(0);
   const toastTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -90,7 +91,7 @@ export default function App() {
     };
   }, [activeScreen]);
 
-  // Initial load
+  // Initial load with smooth splash transition
   const loadData = () => {
     const loadedHabits = StorageService.getHabits();
     const loadedLogs = StorageService.getRelapseLogs();
@@ -104,6 +105,10 @@ export default function App() {
       ? loadedSettings.activeHabitId
       : loadedHabits[0]?.id) || '';
     setActiveHabitId(initialId);
+
+    setTimeout(() => {
+      setIsAppReady(true);
+    }, 150);
   };
 
   useEffect(() => {
@@ -180,6 +185,24 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-gray-200 dark:bg-slate-950 flex flex-col items-center justify-center text-gray-900 dark:text-slate-100 font-sans p-0 sm:p-4 transition-colors duration-200">
+      <AnimatePresence>
+        {!isAppReady && (
+          <motion.div
+            key="splash"
+            initial={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.25 }}
+            className="fixed inset-0 z-50 bg-[#F2F4F7] dark:bg-[#0F172A] flex flex-col items-center justify-center space-y-3"
+          >
+            <div className="w-14 h-14 rounded-2xl bg-[#00897B] flex items-center justify-center text-2xl shadow-lg text-white font-bold">
+              M
+            </div>
+            <span className="text-xl font-extrabold tracking-tight animate-text-shimmer">
+              Momentum
+            </span>
+          </motion.div>
+        )}
+      </AnimatePresence>
       {/* Device View Mode Switcher (Large screens) */}
       <div className="fixed top-3 right-3 z-50 hidden lg:flex items-center gap-1.5 bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-800 p-1 rounded-full shadow-md">
         <button

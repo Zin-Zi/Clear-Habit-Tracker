@@ -1,5 +1,5 @@
-import React, { useState, useRef } from 'react';
-import { Plus, RotateCcw } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+import { Plus, RotateCcw, Clock } from 'lucide-react';
 import { Haptics, ImpactStyle } from '@capacitor/haptics';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Habit } from '../types/habit';
@@ -15,11 +15,32 @@ interface HomeScreenViewProps {
   onDeleteHabit?: (id: string) => void;
 }
 
+const formatElapsedTime = (startIso: string, nowMs: number): string => {
+  const startMs = new Date(startIso).getTime();
+  const diffMs = Math.max(0, nowMs - startMs);
+
+  const totalSeconds = Math.floor(diffMs / 1000);
+  const days = Math.floor(totalSeconds / 86400);
+  const hours = Math.floor((totalSeconds % 86400) / 3600);
+  const minutes = Math.floor((totalSeconds % 3600) / 60);
+  const seconds = totalSeconds % 60;
+
+  if (days > 0) {
+    return `${days}d ${hours}h ${minutes}m ${seconds}s`;
+  }
+  return `${hours}h ${minutes}m ${seconds}s`;
+};
+
+const formatStartTime = (startIso: string): string => {
+  const d = new Date(startIso);
+  if (isNaN(d.getTime())) return '';
+  return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+};
+
 export const HomeScreenView: React.FC<HomeScreenViewProps> = ({
   habits,
   onNavigateToEdit,
   onResetHabit,
-  onUpdateHabit,
   onAddNewHabit,
   onDeleteHabit,
 }) => {
@@ -27,6 +48,15 @@ export const HomeScreenView: React.FC<HomeScreenViewProps> = ({
   const [habitToReset, setHabitToReset] = useState<Habit | null>(null);
   const [resettingId, setResettingId] = useState<string | null>(null);
   const [activeRippleId, setActiveRippleId] = useState<string | null>(null);
+  const [nowMs, setNowMs] = useState(Date.now());
+
+  // Ticking live timer every second for real-time elapsed time display
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setNowMs(Date.now());
+    }, 1000);
+    return () => clearInterval(timer);
+  }, []);
 
   // FAB scroll behavior: shrink on scroll down, expand on scroll up
   const [isScrollingDown, setIsScrollingDown] = useState(false);
@@ -44,9 +74,7 @@ export const HomeScreenView: React.FC<HomeScreenViewProps> = ({
     lastScrollTop.current = currentScrollTop;
   };
 
-
   const handleConfirmReset = (habit: Habit) => {
-    // Trigger haptic feedback
     if (typeof window !== 'undefined' && 'vibrate' in navigator) {
       navigator.vibrate?.([35, 45, 35]);
     }
@@ -73,7 +101,7 @@ export const HomeScreenView: React.FC<HomeScreenViewProps> = ({
   };
 
   return (
-    <div className="flex-1 flex flex-col h-full overflow-hidden bg-[#F5F5F5] dark:bg-slate-950 text-gray-900 dark:text-slate-100 relative transition-colors duration-200">
+    <div className="flex-1 flex flex-col h-full overflow-hidden bg-[#F2F4F7] dark:bg-[#0F172A] text-gray-900 dark:text-slate-100 relative transition-colors duration-200">
       {/* Empty State */}
       {habits.length === 0 ? (
         <motion.div
@@ -82,7 +110,7 @@ export const HomeScreenView: React.FC<HomeScreenViewProps> = ({
           transition={{ duration: 0.2 }}
           className="flex-1 flex flex-col items-center justify-center p-6 text-center"
         >
-          <div className="w-16 h-16 bg-white dark:bg-slate-900 rounded-2xl shadow-md border border-gray-100 dark:border-slate-800 flex items-center justify-center text-2xl mb-4 text-[#00897B] dark:text-teal-400">
+          <div className="w-16 h-16 bg-white dark:bg-slate-900 rounded-2xl shadow-lg border border-gray-100 dark:border-slate-800 flex items-center justify-center text-2xl mb-4 text-[#00897B] dark:text-teal-400">
             🌱
           </div>
           <div className="text-xl font-bold text-gray-900 dark:text-slate-100">No habits yet</div>
@@ -92,14 +120,14 @@ export const HomeScreenView: React.FC<HomeScreenViewProps> = ({
           <motion.button
             whileTap={{ scale: 0.96 }}
             onClick={onAddNewHabit}
-            className="w-full max-w-xs h-12 rounded-xl bg-[#00897B] hover:bg-[#00796B] dark:bg-teal-600 dark:hover:bg-teal-500 text-white font-semibold text-sm flex items-center justify-center gap-2 shadow-md transition-colors"
+            className="w-full max-w-xs h-12 rounded-2xl bg-[#00897B] hover:bg-[#00796B] dark:bg-teal-600 dark:hover:bg-teal-500 text-white font-semibold text-sm flex items-center justify-center gap-2 shadow-lg transition-colors"
           >
             <Plus className="w-5 h-5" />
             <span>Add Habit</span>
           </motion.button>
         </motion.div>
       ) : (
-        /* Modern Cards Habit List with Fast Mobile Framer Motion Animations */
+        /* Modern Cards Habit List with Live Timer */
         <div
           ref={scrollContainerRef}
           onScroll={handleScroll}
@@ -107,11 +135,13 @@ export const HomeScreenView: React.FC<HomeScreenViewProps> = ({
         >
           <AnimatePresence>
             {habits.map((habit, index) => {
-              const start = new Date(habit.startDate).getTime();
-              const liveDays = Math.max(0, Math.floor((Date.now() - start) / (1000 * 60 * 60 * 24)));
-              const bestStreak = Math.max(habit.bestStreakDays, liveDays);
+              const startMs = new Date(habit.startDate).getTime();
+              const liveDays = Math.max(0, Math.floor((nowMs - startMs) / (1000 * 60 * 60 * 24)));
+              const bestStreak = Math.max(habit.bestStreakDays || 0, liveDays);
               const isResetting = resettingId === habit.id;
               const hasRipple = activeRippleId === habit.id;
+              const elapsedTimeStr = formatElapsedTime(habit.startDate, nowMs);
+              const startTimeStr = formatStartTime(habit.startDate);
 
               return (
                 <motion.div
@@ -127,7 +157,7 @@ export const HomeScreenView: React.FC<HomeScreenViewProps> = ({
                     delay: index * 0.04,
                   }}
                   whileTap={{ scale: 0.97 }}
-                  className="bg-white dark:bg-slate-900 rounded-2xl p-4 shadow-[0_4px_12px_rgba(0,0,0,0.06)] dark:shadow-none border border-gray-100 dark:border-slate-800 flex items-center justify-between transition-shadow select-none cursor-pointer hover:shadow-[0_6px_16px_rgba(0,0,0,0.08)] dark:hover:border-slate-700 relative overflow-hidden"
+                  className="bg-white dark:bg-slate-900 rounded-2xl p-4 shadow-[0_4px_16px_rgba(0,0,0,0.08)] dark:shadow-[0_4px_16px_rgba(0,0,0,0.3)] border border-gray-100/80 dark:border-slate-800 flex items-center justify-between transition-all select-none cursor-pointer hover:shadow-[0_6px_20px_rgba(0,0,0,0.12)] relative overflow-hidden"
                   onClick={() => onNavigateToEdit(habit)}
                   onContextMenu={(e) => {
                     e.preventDefault();
@@ -138,7 +168,7 @@ export const HomeScreenView: React.FC<HomeScreenViewProps> = ({
                   }}
                   title="Tap to edit, long-press to delete"
                 >
-                  {/* Water / Ripple Effect Wave Overlay */}
+                  {/* Water Wave Ripple Effect */}
                   <AnimatePresence>
                     {hasRipple && (
                       <motion.div
@@ -151,25 +181,35 @@ export const HomeScreenView: React.FC<HomeScreenViewProps> = ({
                     )}
                   </AnimatePresence>
 
-                  {/* Left side: Habit icon, name & Best streak */}
+                  {/* Left side: Icon, Habit Name, Start Time & Live Elapsed Timer */}
                   <div className="flex items-center gap-3.5 flex-1 min-w-0 pr-2 z-0">
                     <div
-                      className="w-11 h-11 rounded-xl flex items-center justify-center text-xl shrink-0 transition-transform"
-                      style={{ backgroundColor: `${habit.color}20`, color: habit.color }}
+                      className="w-11 h-11 rounded-2xl flex items-center justify-center text-xl shrink-0 transition-transform shadow-xs"
+                      style={{ backgroundColor: `${habit.color}18`, color: habit.color }}
                     >
                       {habit.icon || '🛡️'}
                     </div>
-                    <div className="min-w-0 flex-1">
+                    <div className="min-w-0 flex-1 space-y-0.5">
                       <div className="text-base font-bold text-gray-900 dark:text-slate-100 truncate">
                         {habit.name}
                       </div>
-                      <div className="text-xs text-gray-500 dark:text-slate-400 font-medium mt-0.5">
-                        Best: {bestStreak} {bestStreak === 1 ? 'day' : 'days'}
+                      <div className="text-xs text-gray-500 dark:text-slate-400 font-medium flex items-center gap-1">
+                        <span>Best: {bestStreak}d</span>
+                        {startTimeStr && (
+                          <>
+                            <span>•</span>
+                            <span>Start: {startTimeStr}</span>
+                          </>
+                        )}
+                      </div>
+                      <div className="text-[11px] font-semibold text-[#00897B] dark:text-teal-400 flex items-center gap-1">
+                        <Clock className="w-3 h-3 stroke-[2.5]" />
+                        <span>Elapsed: {elapsedTimeStr}</span>
                       </div>
                     </div>
                   </div>
 
-                  {/* Right side: Day count & reset button */}
+                  {/* Right side: 24-hour cycle day count & reset button */}
                   <div className="flex items-center gap-3.5 shrink-0 pl-2 z-0">
                     <div className="text-right overflow-hidden py-1">
                       <AnimatePresence mode="wait">
@@ -193,7 +233,6 @@ export const HomeScreenView: React.FC<HomeScreenViewProps> = ({
                         {liveDays === 1 ? 'day' : 'days'}
                       </div>
                     </div>
-
 
                     {/* Reset Icon Button */}
                     <motion.button

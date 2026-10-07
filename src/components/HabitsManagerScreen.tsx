@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Haptics, NotificationType } from '@capacitor/haptics';
+import { motion } from 'framer-motion';
 import { Habit } from '../types/habit';
 
 interface HabitsManagerScreenProps {
@@ -14,15 +15,15 @@ interface HabitsManagerScreenProps {
 }
 
 const SIX_COLORS = [
-  '#0D9488', // Teal
-  '#2563EB', // Blue
-  '#0284C7', // Sky
-  '#7C3AED', // Violet
-  '#D97706', // Amber
+  '#00897B', // Soft Teal
+  '#2563EB', // Vibrant Blue
+  '#0284C7', // Sky Blue
+  '#7C3AED', // Deep Violet
+  '#D97706', // Warm Amber
   '#E11D48', // Rose
 ];
 
-const SIX_EMOJIS = ['🛡️', '🚿', '🧘', '📵', '🏋️', '⚡'];
+const SIX_EMOJIS = ['⚡', '🚿', '🧘', '📵', '🏋️', '🌱'];
 
 const toLocalISOString = (isoString?: string) => {
   const date = isoString ? new Date(isoString) : new Date();
@@ -87,10 +88,29 @@ export const HabitsManagerScreen: React.FC<HabitsManagerScreenProps> = ({
   };
 
   return (
-    <div className="flex-1 flex flex-col justify-between p-4 max-w-md mx-auto w-full bg-[#F5F5F5] dark:bg-slate-950 text-gray-900 dark:text-slate-100 overflow-y-auto transition-colors duration-200">
-      <form onSubmit={handleSave} className="space-y-4">
-        <div className="bg-white dark:bg-slate-900 rounded-2xl p-5 shadow-[0_4px_12px_rgba(0,0,0,0.06)] dark:shadow-none border border-gray-100 dark:border-slate-800 space-y-4 transition-colors duration-200">
-          {/* 1. Name Field */}
+    <div className="flex-1 flex flex-col justify-end p-0 sm:p-4 max-w-md mx-auto w-full bg-[#F2F4F7] dark:bg-[#0F172A] text-gray-900 dark:text-slate-100 overflow-y-auto transition-colors duration-200">
+      {/* Bottom-Sheet Style Card Panel */}
+      <motion.div
+        initial={{ y: 40, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        transition={{ type: 'spring', stiffness: 400, damping: 30 }}
+        className="bg-white dark:bg-slate-900 rounded-t-3xl sm:rounded-3xl p-6 shadow-[0_8px_30px_rgba(0,0,0,0.12)] border border-gray-100/80 dark:border-slate-800 space-y-5"
+      >
+        {/* Grab Handle */}
+        <div className="w-12 h-1 bg-gray-200 dark:bg-slate-700 rounded-full mx-auto" />
+
+        {/* Header Title */}
+        <div>
+          <h2 className="text-xl font-black text-gray-900 dark:text-slate-100">
+            {isEditing ? 'Edit Habit' : 'Create Habit'}
+          </h2>
+          <p className="text-xs text-gray-500 dark:text-slate-400 mt-0.5">
+            {isEditing ? 'Update habit details and start time.' : 'Set up a new habit to start your momentum.'}
+          </p>
+        </div>
+
+        <form onSubmit={handleSave} className="space-y-4">
+          {/* 1. Habit Name */}
           <div>
             <label className="block text-xs font-bold text-gray-700 dark:text-slate-300 uppercase tracking-wider mb-1.5">
               Habit Name
@@ -98,38 +118,38 @@ export const HabitsManagerScreen: React.FC<HabitsManagerScreenProps> = ({
             <input
               type="text"
               required
-              placeholder="e.g., No Sugar, Reading, Workout"
+              placeholder="e.g. Morning Meditation, Reading"
               value={name}
               onChange={(e) => {
                 setName(e.target.value);
                 if (e.target.value.trim()) setNameError(false);
               }}
-              className={`w-full bg-gray-50 dark:bg-slate-800 border rounded-xl px-4 py-3 text-sm text-gray-900 dark:text-slate-100 focus:bg-white dark:focus:bg-slate-800 focus:outline-none transition-colors ${
+              className={`w-full bg-gray-50 dark:bg-slate-800 border rounded-2xl px-4 py-3.5 text-sm text-gray-900 dark:text-slate-100 focus:bg-white dark:focus:bg-slate-800 focus:outline-none transition-all shadow-xs ${
                 nameError
                   ? 'border-red-500'
-                  : 'border-gray-200 dark:border-slate-700 focus:border-teal-600 dark:focus:border-teal-400'
+                  : 'border-gray-200 dark:border-slate-700 focus:border-[#00897B] dark:focus:border-teal-400'
               }`}
             />
           </div>
 
-          {/* 2. Start Date & Time */}
+          {/* 2. Streak Start Date & Time */}
           <div>
             <label className="block text-xs font-bold text-gray-700 dark:text-slate-300 uppercase tracking-wider mb-1.5">
-              Streak Start Date & Time
+              Start Date & Time
             </label>
             <input
               type="datetime-local"
               max={toLocalISOString()}
               value={startDateTime}
               onChange={(e) => setStartDateTime(e.target.value)}
-              className="w-full bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-xl px-4 py-3 text-sm text-gray-900 dark:text-slate-100 focus:bg-white dark:focus:bg-slate-800 focus:outline-none focus:border-teal-600 dark:focus:border-teal-400 cursor-pointer transition-colors"
+              className="w-full bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-2xl px-4 py-3.5 text-sm text-gray-900 dark:text-slate-100 focus:bg-white dark:focus:bg-slate-800 focus:outline-none focus:border-[#00897B] dark:focus:border-teal-400 cursor-pointer transition-all shadow-xs"
             />
           </div>
 
-          {/* 3. Color (Row of 6 small color circles) */}
+          {/* 3. Accent Color */}
           <div>
             <label className="block text-xs font-bold text-gray-700 dark:text-slate-300 uppercase tracking-wider mb-2">
-              Accent Color
+              Color Theme
             </label>
             <div className="flex items-center justify-between px-1">
               {SIX_COLORS.map((color) => (
@@ -148,10 +168,10 @@ export const HabitsManagerScreen: React.FC<HabitsManagerScreenProps> = ({
             </div>
           </div>
 
-          {/* 4. Icon (Row of 6 emojis) */}
+          {/* 4. Habit Icon */}
           <div>
             <label className="block text-xs font-bold text-gray-700 dark:text-slate-300 uppercase tracking-wider mb-2">
-              Habit Icon
+              Icon
             </label>
             <div className="flex items-center justify-between px-1">
               {SIX_EMOJIS.map((emoji) => (
@@ -159,9 +179,9 @@ export const HabitsManagerScreen: React.FC<HabitsManagerScreenProps> = ({
                   type="button"
                   key={emoji}
                   onClick={() => setSelectedEmoji(emoji)}
-                  className={`w-11 h-11 rounded-xl text-xl flex items-center justify-center transition-all ${
+                  className={`w-11 h-11 rounded-2xl text-xl flex items-center justify-center transition-all ${
                     selectedEmoji === emoji
-                      ? 'bg-teal-50 dark:bg-teal-950/50 border-2 border-teal-600 dark:border-teal-400 scale-105 shadow-sm'
+                      ? 'bg-[#00897B]/15 dark:bg-teal-950/60 border-2 border-[#00897B] dark:border-teal-400 scale-105 shadow-xs'
                       : 'bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-slate-700 hover:bg-gray-100 dark:hover:bg-slate-700'
                   }`}
                 >
@@ -170,36 +190,38 @@ export const HabitsManagerScreen: React.FC<HabitsManagerScreenProps> = ({
               ))}
             </div>
           </div>
-        </div>
 
-        {/* 5. Buttons at Bottom */}
-        <div className="pt-2 space-y-2.5">
-          <button
-            type="submit"
-            className="w-full h-12 rounded-xl bg-teal-600 hover:bg-teal-700 dark:bg-teal-600 dark:hover:bg-teal-500 text-white font-bold text-sm flex items-center justify-center shadow-md transition-all active:scale-95"
-          >
-            Save Habit
-          </button>
+          {/* Action Buttons */}
+          <div className="pt-3 space-y-2.5">
+            <motion.button
+              whileTap={{ scale: 0.96 }}
+              type="submit"
+              className="w-full h-12 rounded-2xl bg-[#00897B] hover:bg-[#00796B] dark:bg-teal-600 dark:hover:bg-teal-500 text-white font-bold text-sm flex items-center justify-center shadow-md transition-colors"
+            >
+              Save Habit
+            </motion.button>
 
-          {isEditing && existingHabit && (
+            {isEditing && existingHabit && (
+              <motion.button
+                whileTap={{ scale: 0.96 }}
+                type="button"
+                onClick={() => setShowConfirmDelete(true)}
+                className="w-full h-12 rounded-2xl bg-white dark:bg-slate-900 border border-red-200 dark:border-red-900/50 text-red-600 dark:text-rose-400 font-bold text-sm flex items-center justify-center shadow-xs transition-colors hover:bg-red-50 dark:hover:bg-red-950/30"
+              >
+                Delete Habit
+              </motion.button>
+            )}
+
             <button
               type="button"
-              onClick={() => setShowConfirmDelete(true)}
-              className="w-full h-12 rounded-xl bg-white dark:bg-slate-900 border border-red-200 dark:border-red-900/50 hover:bg-red-50 dark:hover:bg-red-950/30 text-red-600 dark:text-rose-400 font-bold text-sm flex items-center justify-center shadow-sm transition-all active:scale-95"
+              onClick={onBack}
+              className="w-full py-2 text-xs font-semibold text-gray-500 dark:text-slate-400 hover:text-gray-900 dark:hover:text-white text-center transition-colors"
             >
-              Delete Habit
+              Cancel
             </button>
-          )}
-
-          <button
-            type="button"
-            onClick={onBack}
-            className="w-full py-2 text-xs font-semibold text-gray-500 dark:text-slate-400 hover:text-gray-900 dark:hover:text-white text-center transition-colors"
-          >
-            Cancel
-          </button>
-        </div>
-      </form>
+          </div>
+        </form>
+      </motion.div>
 
       {/* Delete Confirmation Dialog */}
       {showConfirmDelete && existingHabit && (
