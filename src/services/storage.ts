@@ -160,8 +160,10 @@ export const StorageService = {
   },
 
   clearAllData(): void {
-    localStorage.removeItem(STORAGE_KEYS.HABITS);
-    localStorage.removeItem(STORAGE_KEYS.RELAPSE_LOGS);
-    localStorage.removeItem(STORAGE_KEYS.SETTINGS);
+    try {
+      localStorage.clear();
+    } catch (e) {
+      console.error('Failed to clear storage', e);
+    }
   },
 };

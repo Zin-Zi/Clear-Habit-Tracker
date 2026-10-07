@@ -43,7 +43,7 @@ export const TopAppBar: React.FC<TopAppBarProps> = ({
             <ArrowLeft className="w-5 h-5" />
           </button>
         )}
-        <h1 className="text-lg font-bold text-gray-900 dark:text-slate-100 tracking-tight">
+        <h1 className="text-lg font-extrabold tracking-tight animate-text-shimmer">
           {title}
         </h1>
       </div>

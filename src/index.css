@@ -84,3 +84,39 @@
 .animate-fade-in {
   animation: fadeIn 200ms ease-out forwards;
 }
+
+@keyframes textShimmer {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+.animate-text-shimmer {
+  background: linear-gradient(
+    90deg,
+    #111827 0%,
+    #00897B 50%,
+    #111827 100%
+  );
+  background-size: 200% auto;
+  color: transparent;
+  -webkit-background-clip: text;
+  background-clip: text;
+  animation: textShimmer 6s linear infinite;
+}
+
+.dark .animate-text-shimmer {
+  background: linear-gradient(
+    90deg,
+    #f8fafc 0%,
+    #2dd4bf 50%,
+    #f8fafc 100%
+  );
+  background-size: 200% auto;
+  color: transparent;
+  -webkit-background-clip: text;
+  background-clip: text;
+}
