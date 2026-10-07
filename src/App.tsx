@@ -244,7 +244,7 @@ export default function App() {
 
       {/* Main Container - Material 3 Device Frame */}
       <div
-        className={`w-full bg-[#F5F5F5] dark:bg-slate-950 flex flex-col relative overflow-hidden transition-colors duration-200 ${
+        className={`w-full bg-[#F2F4F7] dark:bg-[#0F172A] flex flex-col relative overflow-hidden transition-colors duration-200 ${
           isPhoneFrame
             ? 'max-w-[420px] h-[100dvh] sm:h-[840px] sm:rounded-3xl sm:border sm:border-gray-300 dark:sm:border-slate-800 sm:shadow-2xl'
             : 'max-w-xl h-[100dvh] sm:h-[90vh] sm:rounded-2xl sm:border sm:border-gray-300 dark:sm:border-slate-800 shadow-xl'

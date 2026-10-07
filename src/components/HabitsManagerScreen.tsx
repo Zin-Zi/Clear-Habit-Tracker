@@ -94,7 +94,7 @@ export const HabitsManagerScreen: React.FC<HabitsManagerScreenProps> = ({
         initial={{ y: 40, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ type: 'spring', stiffness: 400, damping: 30 }}
-        className="bg-white dark:bg-slate-900 rounded-t-3xl sm:rounded-3xl p-6 shadow-[0_8px_30px_rgba(0,0,0,0.12)] border border-gray-100/80 dark:border-slate-800 space-y-5"
+        className="glass-card rounded-t-3xl sm:rounded-3xl p-6 shadow-2xl border border-white/60 dark:border-slate-800 space-y-5"
       >
         {/* Grab Handle */}
         <div className="w-12 h-1 bg-gray-200 dark:bg-slate-700 rounded-full mx-auto" />

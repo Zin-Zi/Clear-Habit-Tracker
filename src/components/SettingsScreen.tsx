@@ -59,8 +59,11 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
   };
 
   return (
-    <div className="flex-1 flex flex-col h-full bg-[#F5F5F5] dark:bg-slate-950 text-gray-900 dark:text-slate-100 select-none overflow-hidden p-4 transition-colors duration-200">
-      <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-[0_4px_12px_rgba(0,0,0,0.06)] dark:shadow-none border border-gray-100 dark:border-slate-800 divide-y divide-gray-100 dark:divide-slate-800 transition-colors duration-200">
+    <div className="flex-1 flex flex-col h-full bg-[#F2F4F7] dark:bg-[#0F172A] text-gray-900 dark:text-slate-100 select-none overflow-hidden p-4 relative transition-colors duration-200">
+      {/* Background Soft Glow */}
+      <div className="absolute top-1/4 -left-20 w-72 h-72 bg-[#00897B]/15 dark:bg-teal-500/10 rounded-full blur-3xl pointer-events-none z-0" />
+
+      <div className="glass-card rounded-2xl border border-white/60 dark:border-slate-800/80 divide-y divide-gray-200/50 dark:divide-slate-800/60 shadow-xl z-10 relative transition-colors duration-200">
         {/* 1. Dark mode (Switch) */}
         <div className="flex items-center justify-between px-4 py-4 min-h-[56px]">
           <span className="text-base font-medium text-gray-800 dark:text-slate-200">Dark mode</span>
@@ -149,8 +152,8 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
 
       {/* Reset Confirmation Dialog */}
       {showConfirmReset && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 dark:bg-black/75 backdrop-blur-xs">
-          <div className="bg-white dark:bg-slate-900 rounded-2xl p-5 max-w-xs w-full space-y-3 shadow-xl border border-gray-100 dark:border-slate-800">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 dark:bg-black/70 backdrop-blur-xs">
+          <div className="glass-card rounded-2xl p-5 max-w-xs w-full space-y-3 shadow-2xl border border-white/60 dark:border-slate-800">
             <h3 className="text-base font-bold text-gray-900 dark:text-slate-100">Are you sure?</h3>
             <p className="text-xs text-gray-600 dark:text-slate-400 leading-relaxed">
               This will erase all your progress.
