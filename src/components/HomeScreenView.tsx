@@ -102,15 +102,19 @@ export const HomeScreenView: React.FC<HomeScreenViewProps> = ({
 
   return (
     <div className="flex-1 flex flex-col h-full overflow-hidden bg-[#F2F4F7] dark:bg-[#0F172A] text-gray-900 dark:text-slate-100 relative transition-colors duration-200">
+      {/* Background Soft Glow Spots */}
+      <div className="absolute -top-24 -left-24 w-80 h-80 bg-[#00897B]/15 dark:bg-teal-500/10 rounded-full blur-3xl pointer-events-none z-0" />
+      <div className="absolute top-1/2 -right-24 w-80 h-80 bg-emerald-500/10 dark:bg-teal-400/10 rounded-full blur-3xl pointer-events-none z-0" />
+
       {/* Empty State */}
       {habits.length === 0 ? (
         <motion.div
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.2 }}
-          className="flex-1 flex flex-col items-center justify-center p-6 text-center"
+          className="flex-1 flex flex-col items-center justify-center p-6 text-center z-10"
         >
-          <div className="w-16 h-16 bg-white dark:bg-slate-900 rounded-2xl shadow-lg border border-gray-100 dark:border-slate-800 flex items-center justify-center text-2xl mb-4 text-[#00897B] dark:text-teal-400">
+          <div className="w-16 h-16 glass-card rounded-2xl shadow-xl flex items-center justify-center text-2xl mb-4 text-[#00897B] dark:text-teal-400 border border-white/60 dark:border-slate-800">
             🌱
           </div>
           <div className="text-xl font-bold text-gray-900 dark:text-slate-100">No habits yet</div>
@@ -120,18 +124,18 @@ export const HomeScreenView: React.FC<HomeScreenViewProps> = ({
           <motion.button
             whileTap={{ scale: 0.96 }}
             onClick={onAddNewHabit}
-            className="w-full max-w-xs h-12 rounded-2xl bg-[#00897B] hover:bg-[#00796B] dark:bg-teal-600 dark:hover:bg-teal-500 text-white font-semibold text-sm flex items-center justify-center gap-2 shadow-lg transition-colors"
+            className="w-full max-w-xs h-12 rounded-2xl bg-[#00897B] hover:bg-[#00796B] dark:bg-teal-600 dark:hover:bg-teal-500 text-white font-semibold text-sm flex items-center justify-center gap-2 shadow-lg shadow-[#00897B]/25 dark:shadow-teal-900/30 transition-colors"
           >
             <Plus className="w-5 h-5" />
             <span>Add Habit</span>
           </motion.button>
         </motion.div>
       ) : (
-        /* Modern Cards Habit List with Live Timer */
+        /* Modern Glassmorphic Cards Habit List with Live Timer */
         <div
           ref={scrollContainerRef}
           onScroll={handleScroll}
-          className="flex-1 overflow-y-auto px-4 py-4 space-y-3.5 pb-24"
+          className="flex-1 overflow-y-auto px-4 py-4 space-y-4 pb-28 z-10 relative"
         >
           <AnimatePresence>
             {habits.map((habit, index) => {
@@ -157,7 +161,7 @@ export const HomeScreenView: React.FC<HomeScreenViewProps> = ({
                     delay: index * 0.04,
                   }}
                   whileTap={{ scale: 0.97 }}
-                  className="bg-white dark:bg-slate-900 rounded-2xl p-4 shadow-[0_4px_16px_rgba(0,0,0,0.08)] dark:shadow-[0_4px_16px_rgba(0,0,0,0.3)] border border-gray-100/80 dark:border-slate-800 flex items-center justify-between transition-all select-none cursor-pointer hover:shadow-[0_6px_20px_rgba(0,0,0,0.12)] relative overflow-hidden"
+                  className="glass-card rounded-2xl p-4.5 flex items-center justify-between transition-all select-none cursor-pointer relative overflow-hidden group hover:border-[#00897B]/40 dark:hover:border-teal-500/40 hover:shadow-xl hover:shadow-[#00897B]/10"
                   onClick={() => onNavigateToEdit(habit)}
                   onContextMenu={(e) => {
                     e.preventDefault();
@@ -168,6 +172,18 @@ export const HomeScreenView: React.FC<HomeScreenViewProps> = ({
                   }}
                   title="Tap to edit, long-press to delete"
                 >
+                  {/* Subtle Colored Accent Bar on Left Edge */}
+                  <div
+                    className="absolute left-0 top-3 bottom-3 w-1 rounded-r-full transition-all"
+                    style={{ backgroundColor: habit.color || '#00897B' }}
+                  />
+
+                  {/* Soft Internal Card Glow */}
+                  <div
+                    className="absolute -right-12 -top-12 w-32 h-32 rounded-full opacity-20 pointer-events-none blur-2xl transition-opacity group-hover:opacity-35"
+                    style={{ backgroundColor: habit.color || '#00897B' }}
+                  />
+
                   {/* Water Wave Ripple Effect */}
                   <AnimatePresence>
                     {hasRipple && (
@@ -182,28 +198,27 @@ export const HomeScreenView: React.FC<HomeScreenViewProps> = ({
                   </AnimatePresence>
 
                   {/* Left side: Icon, Habit Name, Start Time & Live Elapsed Timer */}
-                  <div className="flex items-center gap-3.5 flex-1 min-w-0 pr-2 z-0">
+                  <div className="flex items-center gap-3.5 flex-1 min-w-0 pr-2 pl-2 z-0">
                     <div
-                      className="w-11 h-11 rounded-2xl flex items-center justify-center text-xl shrink-0 transition-transform shadow-xs"
-                      style={{ backgroundColor: `${habit.color}18`, color: habit.color }}
+                      className="w-12 h-12 rounded-2xl flex items-center justify-center text-2xl shrink-0 transition-transform shadow-xs border border-white/40 dark:border-slate-800"
+                      style={{ backgroundColor: `${habit.color || '#00897B'}1f`, color: habit.color || '#00897B' }}
                     >
                       {habit.icon || '🛡️'}
                     </div>
-                    <div className="min-w-0 flex-1 space-y-0.5">
-                      <div className="text-base font-bold text-gray-900 dark:text-slate-100 truncate">
+                    <div className="min-w-0 flex-1 space-y-1">
+                      <div className="text-base font-extrabold text-gray-900 dark:text-slate-100 truncate tracking-tight">
                         {habit.name}
                       </div>
-                      <div className="text-xs text-gray-500 dark:text-slate-400 font-medium flex items-center gap-1">
-                        <span>Best: {bestStreak}d</span>
+                      <div className="text-[11px] text-gray-500 dark:text-slate-400 font-semibold flex items-center gap-1.5">
+                        <span className="px-1.5 py-0.5 rounded-md bg-gray-200/60 dark:bg-slate-800/80 text-gray-700 dark:text-slate-300">
+                          Best: {bestStreak}d
+                        </span>
                         {startTimeStr && (
-                          <>
-                            <span>•</span>
-                            <span>Start: {startTimeStr}</span>
-                          </>
+                          <span className="truncate">Start: {startTimeStr}</span>
                         )}
                       </div>
-                      <div className="text-[11px] font-semibold text-[#00897B] dark:text-teal-400 flex items-center gap-1">
-                        <Clock className="w-3 h-3 stroke-[2.5]" />
+                      <div className="text-xs font-bold text-[#00897B] dark:text-teal-400 flex items-center gap-1 pt-0.5">
+                        <Clock className="w-3.5 h-3.5 stroke-[2.5]" />
                         <span>Elapsed: {elapsedTimeStr}</span>
                       </div>
                     </div>
@@ -277,7 +292,7 @@ export const HomeScreenView: React.FC<HomeScreenViewProps> = ({
             onAddNewHabit();
           }}
           aria-label="Add new habit"
-          className="w-14 h-14 rounded-full bg-[#00897B] hover:bg-[#00796B] dark:bg-teal-600 dark:hover:bg-teal-500 text-white flex items-center justify-center shadow-lg transition-colors group"
+          className="w-14 h-14 rounded-full bg-[#00897B] hover:bg-[#00796B] dark:bg-teal-600 dark:hover:bg-teal-500 text-white flex items-center justify-center shadow-xl shadow-[#00897B]/30 dark:shadow-teal-900/40 border border-white/20 transition-colors group"
         >
           <motion.div whileHover={{ rotate: 90 }} transition={{ duration: 0.15 }}>
             <Plus className="w-6 h-6 stroke-[2.5]" />
@@ -293,14 +308,14 @@ export const HomeScreenView: React.FC<HomeScreenViewProps> = ({
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.15 }}
-            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 dark:bg-black/75 backdrop-blur-xs"
+            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 dark:bg-black/70 backdrop-blur-xs"
           >
             <motion.div
               initial={{ scale: 0.95, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.95, opacity: 0 }}
               transition={{ duration: 0.15 }}
-              className="bg-white dark:bg-slate-900 rounded-2xl p-5 max-w-xs w-full space-y-3 shadow-xl border border-gray-100 dark:border-slate-800"
+              className="glass-card rounded-2xl p-5 max-w-xs w-full space-y-3 shadow-2xl border border-white/60 dark:border-slate-800"
             >
               <h3 className="text-base font-bold text-gray-900 dark:text-slate-100">Reset "{habitToReset.name}"?</h3>
               <p className="text-xs text-gray-600 dark:text-slate-400 leading-relaxed">
@@ -310,7 +325,7 @@ export const HomeScreenView: React.FC<HomeScreenViewProps> = ({
                 <button
                   type="button"
                   onClick={() => setHabitToReset(null)}
-                  className="px-3.5 py-2 text-xs font-semibold text-gray-600 dark:text-slate-300 hover:text-gray-900 dark:hover:text-white rounded-lg hover:bg-gray-100 dark:hover:bg-slate-800 transition-colors"
+                  className="px-3.5 py-2 text-xs font-semibold text-gray-600 dark:text-slate-300 hover:text-gray-900 dark:hover:text-white rounded-lg hover:bg-gray-100/80 dark:hover:bg-slate-800/80 transition-colors"
                 >
                   Cancel
                 </button>
@@ -336,14 +351,14 @@ export const HomeScreenView: React.FC<HomeScreenViewProps> = ({
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.15 }}
-            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 dark:bg-black/75 backdrop-blur-xs"
+            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 dark:bg-black/70 backdrop-blur-xs"
           >
             <motion.div
               initial={{ scale: 0.95, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.95, opacity: 0 }}
               transition={{ duration: 0.15 }}
-              className="bg-white dark:bg-slate-900 rounded-2xl p-5 max-w-xs w-full space-y-3 shadow-xl border border-gray-100 dark:border-slate-800"
+              className="glass-card rounded-2xl p-5 max-w-xs w-full space-y-3 shadow-2xl border border-white/60 dark:border-slate-800"
             >
               <h3 className="text-base font-bold text-gray-900 dark:text-slate-100">Delete "{habitToDelete.name}"?</h3>
               <p className="text-xs text-gray-600 dark:text-slate-400 leading-relaxed">
@@ -353,7 +368,7 @@ export const HomeScreenView: React.FC<HomeScreenViewProps> = ({
                 <button
                   type="button"
                   onClick={() => setHabitToDelete(null)}
-                  className="px-3.5 py-2 text-xs font-semibold text-gray-600 dark:text-slate-300 hover:text-gray-900 dark:hover:text-white rounded-lg hover:bg-gray-100 dark:hover:bg-slate-800 transition-colors"
+                  className="px-3.5 py-2 text-xs font-semibold text-gray-600 dark:text-slate-300 hover:text-gray-900 dark:hover:text-white rounded-lg hover:bg-gray-100/80 dark:hover:bg-slate-800/80 transition-colors"
                 >
                   Cancel
                 </button>

@@ -32,20 +32,27 @@ export const TopAppBar: React.FC<TopAppBarProps> = ({
   }, []);
 
   return (
-    <header className="sticky top-0 z-30 bg-white dark:bg-slate-900 border-b border-gray-100 dark:border-slate-800 px-4 py-3.5 flex items-center justify-between select-none transition-colors duration-200">
+    <header className="sticky top-0 z-30 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-b border-gray-200/50 dark:border-slate-800/60 px-5 py-4 flex items-center justify-between select-none transition-colors duration-200">
       <div className="flex items-center gap-3">
         {!isRootScreen && onNavigateBack && (
           <button
             onClick={onNavigateBack}
             aria-label="Back"
-            className="p-1 -ml-1 text-gray-700 dark:text-slate-300 hover:text-gray-900 dark:hover:text-white rounded-full hover:bg-gray-100 dark:hover:bg-slate-800 transition-colors"
+            className="p-1.5 -ml-1 text-gray-700 dark:text-slate-300 hover:text-gray-900 dark:hover:text-white rounded-full hover:bg-gray-100/80 dark:hover:bg-slate-800/80 transition-colors"
           >
             <ArrowLeft className="w-5 h-5" />
           </button>
         )}
-        <h1 className="text-lg font-extrabold tracking-tight animate-text-shimmer">
-          {title}
-        </h1>
+        <div className="flex items-start gap-1.5">
+          <h1 className="text-2xl font-black tracking-tight animate-text-shimmer">
+            {title}
+          </h1>
+          {title === 'Momentum' && (
+            <span className="text-[10px] font-black tracking-widest uppercase px-1.5 py-0.5 rounded-md bg-gradient-to-r from-[#00897B] to-emerald-500 text-white shadow-xs leading-none mt-0.5">
+              PRO
+            </span>
+          )}
+        </div>
       </div>
 
       {/* 3-Dot Overflow Menu */}
