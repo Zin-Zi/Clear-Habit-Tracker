@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { AppSettings } from '../types/habit';
 import { StorageService } from '../services/storage';
 
@@ -14,6 +14,7 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
   onDataReload,
 }) => {
   const [showConfirmReset, setShowConfirmReset] = useState(false);
+  const timeInputRef = useRef<HTMLInputElement>(null);
 
   const isDarkMode = Boolean(settings.darkMode);
   const isReminderEnabled = Boolean(settings.reminderEnabled);
@@ -100,21 +101,33 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
           </button>
         </div>
 
-        {/* 3. Reminder time (button, opens time picker — shown only when reminder is ON) */}
+        {/* 3. Reminder time (button, opens native time picker) */}
         {isReminderEnabled && (
           <div className="flex items-center justify-between px-4 py-4 min-h-[56px]">
             <span className="text-base font-medium text-gray-800 dark:text-slate-200">Reminder time</span>
-            <div className="relative">
+            <div className="relative flex items-center">
               <input
+                ref={timeInputRef}
                 type="time"
                 value={reminderTime}
                 onChange={handleTimeChange}
-                className="absolute inset-0 opacity-0 w-full h-full cursor-pointer z-10"
+                className="sr-only"
                 id="time-picker-input"
               />
               <button
                 type="button"
-                className="px-3.5 py-2 rounded-xl bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-slate-700 text-sm font-semibold text-teal-600 dark:text-teal-400 hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors shadow-2xs"
+                onClick={() => {
+                  try {
+                    if (timeInputRef.current?.showPicker) {
+                      timeInputRef.current.showPicker();
+                    } else {
+                      timeInputRef.current?.click();
+                    }
+                  } catch {
+                    timeInputRef.current?.click();
+                  }
+                }}
+                className="px-3.5 py-2 rounded-xl bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-slate-700 text-sm font-semibold text-teal-600 dark:text-teal-400 hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors shadow-2xs active:scale-95"
               >
                 {formatDisplayTime(reminderTime)}
               </button>
