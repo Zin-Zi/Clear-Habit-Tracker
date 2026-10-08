@@ -101,7 +101,7 @@ export const HomeScreenView: React.FC<HomeScreenViewProps> = ({
   };
 
   return (
-    <div className="flex-1 flex flex-col h-full overflow-hidden bg-[#F2F4F7] dark:bg-[#0F172A] text-gray-900 dark:text-slate-100 relative transition-colors duration-200">
+    <div className="flex-1 flex flex-col h-full overflow-hidden bg-slate-200/60 dark:bg-[#070D19] text-gray-900 dark:text-slate-100 relative transition-colors duration-200">
       {/* Animated Background Soft Breathing Glow Spots */}
       <div className="absolute -top-24 -left-24 w-80 h-80 bg-[#00897B]/20 dark:bg-teal-400/15 rounded-full blur-3xl pointer-events-none z-0 animate-breathing-glow" />
       <div className="absolute top-1/2 -right-24 w-80 h-80 bg-emerald-500/15 dark:bg-teal-400/10 rounded-full blur-3xl pointer-events-none z-0 animate-breathing-glow" style={{ animationDelay: '3s' }} />
@@ -172,9 +172,15 @@ export const HomeScreenView: React.FC<HomeScreenViewProps> = ({
                   }}
                   title="Tap to edit, long-press to delete"
                 >
-                  {/* Softened Muted Colored Accent Bar on Left Edge */}
+                  {/* Left Accent Bar - Gradient Glow with Blended Color */}
                   <div
-                    className="absolute left-0 top-3.5 bottom-3.5 w-1 rounded-r-full transition-all opacity-60 dark:opacity-75"
+                    className="absolute left-0 top-0 bottom-0 w-8 pointer-events-none transition-all opacity-35 group-hover:opacity-50"
+                    style={{
+                      background: `linear-gradient(to right, ${habit.color || '#00897B'}, ${habit.color ? `${habit.color}88` : '#2563EB88'}, transparent)`,
+                    }}
+                  />
+                  <div
+                    className="absolute left-0 top-2.5 bottom-2.5 w-1 rounded-r-full transition-all"
                     style={{ backgroundColor: habit.color || '#00897B' }}
                   />
 
@@ -198,28 +204,35 @@ export const HomeScreenView: React.FC<HomeScreenViewProps> = ({
                   </AnimatePresence>
 
                   {/* Left side: Icon, Habit Name, Start Time & Live Elapsed Timer */}
-                  <div className="flex items-center gap-3.5 flex-1 min-w-0 pr-2 pl-2 z-0">
+                  <div className="flex items-center gap-3 flex-1 min-w-0 pr-1 pl-1 z-0">
                     <div
-                      className="w-12 h-12 rounded-2xl flex items-center justify-center text-2xl shrink-0 transition-transform shadow-xs border border-white/40 dark:border-slate-800"
+                      className="w-11 h-11 rounded-2xl flex items-center justify-center text-xl shrink-0 transition-transform shadow-xs border border-white/40 dark:border-slate-800"
                       style={{ backgroundColor: `${habit.color || '#00897B'}1f`, color: habit.color || '#00897B' }}
                     >
                       {habit.icon || '🛡️'}
                     </div>
-                    <div className="min-w-0 flex-1 space-y-1">
-                      <div className="text-base font-extrabold text-gray-900 dark:text-slate-100 truncate tracking-tight">
-                        {habit.name}
-                      </div>
-                      <div className="text-[11px] text-gray-500 dark:text-slate-400 font-semibold flex items-center gap-1.5">
-                        <span className="px-1.5 py-0.5 rounded-md bg-gray-200/60 dark:bg-slate-800/80 text-gray-700 dark:text-slate-300">
-                          Best: {bestStreak}d
+                    <div className="min-w-0 flex-1 space-y-0.5">
+                      <div className="flex items-center gap-2">
+                        <span className="text-base font-extrabold text-gray-900 dark:text-slate-100 truncate tracking-tight">
+                          {habit.name}
                         </span>
-                        {startTimeStr && (
-                          <span className="truncate">Start: {startTimeStr}</span>
-                        )}
+                        {/* "Best" Badge - Circular Shape & Complementary Soft Teal/Amber Tint */}
+                        <div
+                          className="w-6 h-6 rounded-full bg-[#00897B]/15 dark:bg-teal-400/20 text-[#00897B] dark:text-teal-300 border border-[#00897B]/30 dark:border-teal-400/30 flex items-center justify-center text-[10px] font-black shrink-0 shadow-xs"
+                          title={`Best streak: ${bestStreak} days`}
+                        >
+                          {bestStreak}d
+                        </div>
                       </div>
-                      <div className="text-xs font-bold text-[#00897B] dark:text-teal-400 flex items-center gap-1 pt-0.5">
-                        <Clock className="w-3.5 h-3.5 stroke-[2.5]" />
-                        <span>Elapsed: {elapsedTimeStr}</span>
+                      {startTimeStr && (
+                        <div className="text-[11px] text-gray-500 dark:text-slate-400 font-medium truncate">
+                          Start: {startTimeStr}
+                        </div>
+                      )}
+                      {/* Elapsed Time - Single Line & Readable Size */}
+                      <div className="text-xs font-bold text-[#00897B] dark:text-teal-400 flex items-center gap-1 whitespace-nowrap overflow-hidden text-ellipsis">
+                        <Clock className="w-3.5 h-3.5 stroke-[2.5] shrink-0" />
+                        <span className="whitespace-nowrap">Elapsed: {elapsedTimeStr}</span>
                       </div>
                     </div>
                   </div>
