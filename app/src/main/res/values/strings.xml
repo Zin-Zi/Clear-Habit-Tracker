@@ -1,0 +1,43 @@
+<resources>
+    <string name="app_name">မလေးစကားပြော</string>
+    <string name="translate_tab">ဘာသာပြန်ဆိုမှု</string>
+    <string name="vocabulary_tab">စကားစာလိုး</string>
+    <string name="progress_tab">ကြိုးစားမှု</string>
+    
+    <!-- Onboarding -->
+    <string name="onboarding_title">မလေးစကားပြ 세상에 স্বာဂ်ဏ</string>
+    <string name="onboarding_subtitle">မြန်မာဘာသာစကားဖြင့် மலေးဗာသာစကားကို လေ့လာပါ</string>
+    <string name="onboarding_feature_translate">ဘာသာပြန်ဆိုမှု: အင်္ဂလိပ်နဲ့ မလေးစာကို မြန်မာ၊ အင်္ဂလိပ်၊ မလေး (၃) ဘာသာဖြင့် ပြန်ဆိုပေးမှာ</string>
+    <string name="onboarding_feature_vocabulary">စကားစာလိုး: အသုံးများတဲ့ စာဖတ်များကို ကျ lagu်၍ လေ့လာပါ</string>
+    <string name="onboarding_feature_progress">ကြိုးစားမှု: သင်လေ့လာခဲ့တဲ့ စာဖတ်များ၏ ရာသီဖွဲ့ရလဒ်ကို ကြည့်ပါ</string>
+    <string name="onboarding_get_started">စတင်လေ့လာမည်</string>
+    
+    <!-- Translate Screen -->
+    <string name="translate_hint">အင်္ဂလိပ်နဲ့ မလေးစာထဲမှ တစ်ခုကို ရိုက်ထည့်ပါ</string>
+    <string name="translate_button">ဘာသာပြန်ဆိုရန်</string>
+    <string name="translate_result_myanmar">မြန်မာ</string>
+    <string name="translate_result_english">အင်္ဂလိပ်</string>
+    <string name="translate_result_malay">မလေး</string>
+    <string name="translate_explanation">解析</string>
+    <string name="translate_error_network">อินเทอร์เน็ตการเชื่อมต่อを確認してください</string>
+    <string name="translate_error_empty">ကျေးဇူးပြုပြီး စာသားထည့်သွင်းပါ</string>
+    <string name="translate_copied">ကော်ပီပြီးပါပြီ</string>
+    
+    <!-- Vocabulary Screen -->
+    <string name="vocabulary_empty">စကားစာလုံးများ မရှိသေးပါ</string>
+    <string name="vocabulary_mark_learned">လေ့လာပြီး</string>
+    <string name="vocabulary_already_learned">လေ့လာပြီးသားပါ</string>
+    <string name="vocabulary_swipe_hint">လက်ဆောင်/� Châte ကျောပြီး နောက်တစ်ခုသို့ ရောက်ပါ</string>
+    
+    <!-- Progress Screen -->
+    <string name="progress_title">သင့်ရဲ့ ကြိုးစားမှု</string>
+    <string name="progress_learned_count">လေ့လာပြီးသားသော စာဖတ်များ</string>
+    <string name="progress_total_count">စုစုပေါင်း စာဖတ်များ</string>
+    <string name="progress_percentage">%</string>
+    <string name="progress_keep_going">တစ်ဆင့် လေ့လာလိုက်ပါ!</string>
+    
+    <!-- Common -->
+    <string name="loading">လုပ်ဆောင်နေပါသည်…</string>
+    <string name="error_generic">အမှားတစ်ခုဖြစ်ပွားပါသည်</string>
+    <string name="retry">နောက်ထပ်ကြိုးစားပါ</string>
+</resources>

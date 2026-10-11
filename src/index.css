@@ -1,58 +1,9 @@
 @import "tailwindcss";
 
+/* Momentum is dark-only. The `dark` class is pinned on <html> (see index.html)
+   and every colour below is already its dark value — no light-mode rules exist.
+   The variant stays declared so `dark:` utilities still compile if reintroduced. */
 @custom-variant dark (&:where(.dark, .dark *));
-
-@keyframes cardEnter {
-  0% {
-    opacity: 0;
-    transform: translateY(14px) scale(0.97);
-  }
-  100% {
-    opacity: 1;
-    transform: translateY(0) scale(1);
-  }
-}
-
-@keyframes cardExit {
-  0% {
-    opacity: 1;
-    transform: scale(1);
-    max-height: 120px;
-    margin-bottom: 0.875rem;
-  }
-  100% {
-    opacity: 0;
-    transform: scale(0.85);
-    max-height: 0;
-    margin-bottom: 0;
-    padding-top: 0;
-    padding-bottom: 0;
-  }
-}
-
-@keyframes numberPulse {
-  0% {
-    transform: scale(1);
-  }
-  50% {
-    transform: scale(1.12);
-    color: #00897B;
-  }
-  100% {
-    transform: scale(1);
-  }
-}
-
-@keyframes screenSlideIn {
-  0% {
-    opacity: 0;
-    transform: translateX(12px);
-  }
-  100% {
-    opacity: 1;
-    transform: translateX(0);
-  }
-}
 
 @keyframes fadeIn {
   0% {
@@ -65,33 +16,8 @@
   }
 }
 
-.animate-card-enter {
-  animation: cardEnter 280ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
-}
-
-.animate-card-exit {
-  animation: cardExit 240ms cubic-bezier(0.4, 0, 0.2, 1) forwards;
-}
-
-.animate-number-pulse {
-  animation: numberPulse 350ms cubic-bezier(0.34, 1.56, 0.64, 1);
-}
-
-.animate-screen-enter {
-  animation: screenSlideIn 300ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
-}
-
 .animate-fade-in {
   animation: fadeIn 200ms ease-out forwards;
-}
-
-@keyframes textShimmer {
-  0% {
-    background-position: 200% 0;
-  }
-  100% {
-    background-position: -200% 0;
-  }
 }
 
 @keyframes breathingGlow {
@@ -107,68 +33,542 @@
 
 .animate-breathing-glow {
   animation: breathingGlow 6s ease-in-out infinite;
+  will-change: transform, opacity;
 }
 
-.animate-text-shimmer {
-  background: linear-gradient(
-    90deg,
-    #111827 0%,
-    #00897B 50%,
-    #111827 100%
-  );
-  background-size: 200% auto;
-  color: transparent;
-  -webkit-background-clip: text;
-  background-clip: text;
-  animation: textShimmer 6s linear infinite;
+/* Card background wash: opacity-only breathing (runs on every WebView). */
+.glow-breathe {
+  animation: glowBreathe 3.5s ease-in-out infinite;
+  will-change: opacity;
 }
 
-.dark .animate-text-shimmer {
-  background: linear-gradient(
-    90deg,
-    #f8fafc 0%,
-    #2dd4bf 50%,
-    #f8fafc 100%
-  );
-  background-size: 200% auto;
-  color: transparent;
-  -webkit-background-clip: text;
-  background-clip: text;
+@keyframes glowBreathe {
+  0%,
+  100% {
+    opacity: 0.12;
+  }
+  50% {
+    opacity: 0.4;
+  }
 }
 
-/* Glassmorphism & Ambient Glow utilities */
+/* Card progress-ring halo: a wide accent disc under the arc, pulsing in
+   opacity (compositor-only, so it runs everywhere filters may not). */
+.halo-breathe {
+  animation: haloBreathe 4s ease-in-out infinite;
+  will-change: opacity;
+}
+
+@keyframes haloBreathe {
+  0%,
+  100% {
+    opacity: 0.2;
+  }
+  50% {
+    opacity: 0.65;
+  }
+}
+
+/* ---------- Stats glass ----------
+   Mirrors the Home habit-card treatment so both screens feel like one app.
+   The fill alpha is derived from the Transparency setting (--glass-alpha) but
+   scaled to ~62% of it, so at the default level 1 this lands near the intended
+   0.5 while still letting the user push the cards clearer or more solid. */
+.stat-glass {
+  box-shadow:
+    0 8px 16px rgba(0, 0, 0, 0.3),
+    0 1px 0 rgba(255, 255, 255, 0.06) inset;
+  transition: background-color 0.2s ease, border-color 0.2s ease;
+}
+
+/* Calendar day cells: a small pane of glass sitting inside the larger card.
+   Contrast-tuned so the date numerals stay legible on the dark glass. */
+.stat-day {
+  background: rgba(255, 255, 255, 0.09);
+  border: 1px solid rgba(255, 255, 255, 0.13);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.07);
+  /* Near-white, extra-heavy — the numerals must never fade into the glass. */
+  color: #ffffff;
+  font-weight: 900;
+  transition: background-color 0.15s ease, border-color 0.15s ease, transform 0.1s ease;
+}
+
+.stat-day:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.16);
+  border-color: rgba(255, 255, 255, 0.24);
+  color: #ffffff;
+}
+
+/* Done: solid white, so the checkmark needs dark ink to read. */
+.stat-day-done {
+  background: #fafafa;
+  border-color: rgba(255, 255, 255, 0.9);
+  color: #09090b;
+  box-shadow: 0 2px 10px -2px rgba(255, 255, 255, 0.45);
+}
+
+/* Skipped: solid zinc with light ink. */
+.stat-day-skipped {
+  background: #52525b;
+  border-color: rgba(161, 161, 170, 0.9);
+  color: #fafafa;
+  box-shadow: 0 2px 10px -2px rgba(0, 0, 0, 0.55);
+}
+
+/* Today: white, bolder, with a lit halo so the current date is unmistakable. */
+.stat-day-today {
+  border: 2px solid #fafafa;
+  background: rgba(255, 255, 255, 0.14);
+  color: #ffffff;
+  font-weight: 800;
+  box-shadow:
+    0 0 0 2px rgba(255, 255, 255, 0.25),
+    0 0 14px rgba(255, 255, 255, 0.35);
+}
+
+/* ---------- Home stage: photo backdrop + readability overlay ---------- */
+.home-stage {
+  isolation: isolate;
+}
+
+.home-bg {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  /* Moody premium backdrop: bundled local photo picked in Settings
+     (works offline on device), deep gradient fallback keeps it elegant
+     if it can't load. */
+  background-image: var(--app-bg-image, url('/images/bg-1.jpg'));
+  background-color: #0b1026;
+  background-size: cover;
+  background-position: center 30%;
+  filter: brightness(1.12) saturate(1.05) blur(var(--app-bg-blur, 0px));
+  transform: scale(1.04);
+}
+
+.home-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background: rgba(0, 0, 0, 0.42);
+}
+
+/* Premium glassmorphism: strong blur, layered shadow, no borders — free-floating glass */
+.home-stage .glass-card {
+  background: rgba(17, 25, 44, 0.62);
+  backdrop-filter: blur(12px) saturate(1.15);
+  -webkit-backdrop-filter: blur(12px) saturate(1.15);
+  box-shadow:
+    0 16px 40px -10px rgba(0, 0, 0, 0.7),
+    0 0 24px 0 rgba(255, 255, 255, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 0.09);
+}
+
+/* ---------- Premium typography (Latin + Myanmar) & luxe card ---------- */
+.premium-title {
+  font-family: "SF Pro Display", -apple-system, BlinkMacSystemFont, "Segoe UI", Inter, Roboto, "Noto Sans Myanmar", "Myanmar Text", "Helvetica Neue", Arial, sans-serif;
+  font-weight: 700;
+  letter-spacing: -0.015em;
+  line-height: 1.45;
+}
+
+.premium-meta {
+  font-family: "SF Pro Text", -apple-system, BlinkMacSystemFont, "Segoe UI", Inter, Roboto, "Noto Sans Myanmar", "Myanmar Text", "Helvetica Neue", Arial, sans-serif;
+  letter-spacing: 0.01em;
+  line-height: 1.5;
+}
+
+/* Modern geometric display face for card hero text (Sora webfont). */
+.font-display {
+  font-family: 'Sora', 'Plus Jakarta Sans', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  font-variant-numeric: tabular-nums;
+}
+
+.habit-card-luxe {
+  box-shadow:
+    0 16px 32px -8px rgba(0, 0, 0, 0.75),
+    0 4px 10px -2px rgba(0, 0, 0, 0.5),
+    inset 0 1px 0 rgba(255, 255, 255, 0.15);
+}
+
+/* ---------- 1. Thick 3D glass + left-edge glow from within, borderless ---------- */
+.home-stage .habit-card-luxe {
+  background: rgba(17, 25, 44, 0.62);
+  backdrop-filter: blur(12px) saturate(180%);
+  -webkit-backdrop-filter: blur(12px) saturate(180%);
+  border-radius: 32px;
+  /* Light catching the glass edge: brighter top, fainter left.
+     Borderless — glow only, no box lines. */
+  box-shadow:
+    0 16px 32px -8px rgba(0, 0, 0, 0.75),
+    0 4px 10px -2px rgba(0, 0, 0, 0.5),
+    inset 0 1px 0 rgba(255, 255, 255, 0.15),
+    inset 20px 0 30px -20px var(--glow, rgba(139, 92, 246, 0.55));
+}
+
+/* ---------- 2. (shimmer sweep removed — unreliable on Android WebView) ---------- */
+
+/* ---------- Tactile press feedback ----------
+   One rule covers every tappable element in the app.
+
+   Why the standalone `scale` property instead of `transform: scale()`:
+     - Tailwind v4 compiles `-translate-x-*` / `rotate-*` to the independent
+       `translate` / `rotate` properties, and framer-motion writes `transform`.
+       `scale` composes with all of them instead of overwriting them — so a
+       centred dialog can't lose its `-translate-x-1/2` mid-press.
+     - `:where()` gives this rule ZERO specificity, so any per-component
+       `active:scale-*` utility still wins where one already exists.
+
+   Press is fast (60ms), release is springy (280ms) — that mismatch is what
+   makes a tap feel physical rather than mechanical.
+
+   Deliberately not `transition: all`: that would animate layout properties
+   (width/margin/padding) and cause jank on Android. Only compositor-friendly
+   `scale` and `filter` are transitioned.
+
+   These MUST live in `@layer components`. Unlayered CSS beats every layered
+   rule regardless of specificity, so leaving them unlayered would make
+   `scale: 1` silently override Tailwind's `scale-105` swatches and `active:scale-*`
+   utilities. In the layer order, utilities win — which is exactly the
+   precedence we want. */
+@layer components {
+  :where(button, [role='button'], [role='switch'], [role='tab'], a[href], summary):not(:disabled) {
+    scale: 1;
+    /* Kill the blue Android tap flash — it reads as cheap on a dark theme. */
+    -webkit-tap-highlight-color: transparent;
+
+    /* `!important` is required, not lazy: many buttons already carry Tailwind's
+       `transition-colors` / `transition-all`, which live in the later
+       `utilities` layer and would replace `transition-property` outright —
+       leaving `scale` untransitioned, so the release snapped instead of
+       springing. Colour properties are kept in the list so existing hover
+       fades still animate. */
+    transition-property: scale, filter, color, background-color, border-color, opacity !important;
+    transition-duration: 0.2s, 0.15s, 0.15s, 0.15s, 0.15s, 0.15s !important;
+    transition-timing-function:
+      cubic-bezier(0.34, 1.56, 0.64, 1), ease-out, ease-out, ease-out, ease-out, ease-out !important;
+  }
+
+  :where(button, [role='button'], [role='switch'], [role='tab'], a[href], summary):not(:disabled):active {
+    scale: 0.95;
+    filter: brightness(0.92);
+    /* Snappy press; the release inherits the 0.2s ease from above. */
+    transition-duration: 0.06s, 0.06s, 0.06s, 0.06s, 0.06s, 0.06s !important;
+    transition-timing-function: ease-out !important;
+  }
+
+  /* Settings colour swatches scale on their own; keep the global press subtler
+     so the two effects don't compound into a big jump. */
+  :where(button[aria-pressed]):not(:disabled):active {
+    scale: 0.92;
+  }
+}
+
+/* ---------- Global appearance settings (driven from Settings) ----------
+   App.tsx writes these three custom properties onto <html>; every rule below
+   reads them, so changing a setting repaints the whole app with no re-render. */
+:root {
+  /* Interaction timing: one place for every UI duration. */
+  --dur-fast: 150ms;
+  --dur-med: 200ms;
+  --dur-ring: 300ms;
+  /* Habit card scale: one place for every card size. Tune these to rescale. */
+  --card-pad: 12px;
+  --card-gap: 12px;
+  --card-min-h: 128px;
+  --ring-size: 84px;
+  --ring-stroke: 6.5px;
+  --list-gap: 8px;
+  /* Primary text colour, chosen from TEXT_COLOR_OPTIONS. */
+  --app-text-color: #ffffff;
+  /* Secondary + muted tiers derived live from the primary — they re-tint
+     automatically whenever the setting changes. */
+  --app-text-dim: color-mix(in srgb, var(--app-text-color) 75%, transparent);
+  --app-text-faint: color-mix(in srgb, var(--app-text-color) 55%, transparent);
+  /* Glass fill alpha, chosen from TRANSPARENCY_ALPHAS (5 solid … 10 clear). */
+  --glass-alpha: 0.3;
+  /* Blur radius shared by every glass surface, so they all read as one material. */
+  --glass-blur: 12px;
+}
+
+/* Apply the chosen text colour globally, in tiers.
+   Every neutral text utility in the app is re-pointed at the setting, so
+   changing Text colour re-tints ALL text at once with no re-render:
+     primary — white / gray-100 / gray-200 / slate-50 / slate-100
+     dim     — zinc-100 / zinc-200 / slate-200 / gray-300 / slate-300
+     faint   — gray-400 / slate-400 / slate-500 / gray-500 / zinc-300 / zinc-400
+   Unlayered rules beat Tailwind's layered utilities, and `hover:` / `placeholder:`
+   variants keep working (different selectors, untouched).
+   Deliberately excluded: `.text-zinc-950` + `.text-slate-900` (dark ink on
+   light chips — Save button, active preset, Done cell, swatch check) and
+   `.text-transparent` (gradient text). Forcing those to follow would make
+   white-on-white unreadable.
+   The very soft shadow is deliberate: at level 10 the glass behind the text is
+   only 0.08 opaque, so without it the text loses contrast against the photo.
+   A shadow keeps the type legible without re-solidifying the surface. */
+body,
+.text-app,
+.text-slate-50,
+.text-slate-100,
+.text-white,
+.text-gray-100,
+.text-gray-200 {
+  color: var(--app-text-color);
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
+}
+
+.text-zinc-100,
+.text-zinc-200,
+.text-slate-200,
+.text-gray-300,
+.text-slate-300 {
+  color: var(--app-text-dim);
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
+}
+
+.text-gray-400,
+.text-slate-400,
+.text-slate-500,
+.text-gray-500,
+.text-zinc-300,
+.text-zinc-400 {
+  color: var(--app-text-faint);
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
+}
+
+/* Fixed white: immune to the Text colour setting. Defined AFTER the tiers so
+   it wins when combined with a tier class. Used for section headers and the
+   bottom nav labels, which must stay pure white. */
+.text-fixed-white {
+  color: #ffffff;
+}
+
+/* ---------- Shared glass treatment ----------
+   Every surface — habit cards, stat cards, settings cards, the FAB and the
+   Daily Mark dialog — gets the same blur + rim, so changing the transparency
+   slider feels like it moves one material rather than several. */
+.glass-card,
+.home-stage .glass-card,
+.home-stage .habit-card-luxe,
+.stat-glass,
+.day-mark-glass {
+  backdrop-filter: blur(var(--glass-blur)) saturate(130%);
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(130%);
+}
+
+/* Fill tints per surface family, all driven by the one alpha.
+   Scaled to ~65% so the glass reads clearer; unsupported browsers keep
+   the solid rgba fallback on the line above each color-mix rule. */
 .glass-card {
-  background: rgba(255, 255, 255, 0.88);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  border: 1px solid rgba(255, 255, 255, 0.95);
-  box-shadow: 0 10px 30px -5px rgba(0, 137, 123, 0.12), 0 4px 12px 0 rgba(0, 0, 0, 0.06);
+  background-color: rgba(15, 23, 42, var(--glass-alpha));
+  background-color: color-mix(in srgb, rgb(15 23 42) calc(var(--glass-alpha) * 65%), transparent);
 }
 
-.dark .glass-card {
-  background: rgba(15, 23, 42, 0.85);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  box-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.5), 0 0 20px 0 rgba(45, 212, 191, 0.08);
+.home-stage .glass-card {
+  background-color: rgba(17, 25, 44, var(--glass-alpha));
+  background-color: color-mix(in srgb, rgb(17 25 44) calc(var(--glass-alpha) * 65%), transparent);
 }
 
-.ambient-glow {
+/* Habit cards follow the Transparency setting 1:1 — full alpha, direct. */
+.home-stage .habit-card-luxe {
+  background-color: rgba(17, 25, 44, var(--glass-alpha));
+}
+
+.stat-glass,
+.day-mark-glass {
+  background-color: rgba(30, 30, 46, var(--glass-alpha));
+  background-color: color-mix(in srgb, rgb(30 30 46) calc(var(--glass-alpha) * 65%), transparent);
+}
+
+/* ---------- Daily Mark: compact floating glass pop-up ----------
+   Same glass as everything else, plus a deeper drop shadow so it still reads
+   as the topmost layer. Backdrop-filter blurs what is behind the element, so
+   the card needs to be its own stacking context. */
+.day-mark-glass {
+  box-shadow:
+    0 28px 60px -14px rgba(0, 0, 0, 0.75),
+    0 10px 24px -8px rgba(0, 0, 0, 0.6),
+    inset 0 1px 0 rgba(255, 255, 255, 0.12);
+}
+
+/* Pill action rows. Each option carries its own accent colour via a custom
+   property so hover/active states stay in one place. */
+.day-mark-action {
+  background: color-mix(in srgb, var(--accent) 12%, transparent);
+  border-color: color-mix(in srgb, var(--accent) 45%, transparent);
+  color: var(--accent);
+}
+
+.day-mark-action:not(.is-active):hover {
+  background: color-mix(in srgb, var(--accent) 22%, transparent);
+  border-color: color-mix(in srgb, var(--accent) 70%, transparent);
+}
+
+.day-mark-action.is-active {
+  background: color-mix(in srgb, var(--accent) 26%, transparent);
+  border-color: color-mix(in srgb, var(--accent) 85%, transparent);
+}
+
+/* Fallback where color-mix is unsupported: flat translucent pills. */
+@supports not (background: color-mix(in srgb, red 10%, transparent)) {
+  .day-mark-action {
+    background: rgba(148, 163, 184, 0.14);
+    border-color: rgba(148, 163, 184, 0.35);
+    color: #e2e8f0;
+  }
+}
+
+/* ---------- Wordmark ----------
+   Live text wordmark (see Wordmark.tsx): crisp at any size, with a halo
+   glow on the wrapper rather than a filter on the glyphs. */
+/* Short fade on first paint. `both` holds the start state during the delay. */
+@keyframes wordmarkFade {  from {
+    opacity: 0;
+    transform: translateY(2px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.wordmark-enter {
+  animation: wordmarkFade 180ms ease-out both;
+}
+
+/* Glass slider thumb: monochrome silver FAB knob. Track fill is painted inline
+   (accent portion vs. glass portion) so it follows the live value. */
+input[type='range'].glass-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 24px;
+  height: 24px;
+  border-radius: 9999px;
+  background: linear-gradient(135deg, #fafafa, #a1a1aa);
+  box-shadow:
+    0 4px 14px rgba(255, 255, 255, 0.35),
+    0 0 10px rgba(255, 255, 255, 0.25);
+  cursor: pointer;
+  transition: transform 0.15s ease;
+}
+
+input[type='range'].glass-slider::-webkit-slider-thumb:hover {
+  transform: scale(1.12);
+}
+
+input[type='range'].glass-slider::-moz-range-thumb {
+  width: 24px;
+  height: 24px;
+  border-radius: 9999px;
+  border: none;
+  background: linear-gradient(135deg, #fafafa, #a1a1aa);
+  box-shadow:
+    0 4px 14px rgba(255, 255, 255, 0.35),
+    0 0 10px rgba(255, 255, 255, 0.25);
+  cursor: pointer;
+}
+
+/* Typewriter caret: blinks continuously during and after typing.
+   `step-end` gives the crisp on/off terminal feel (no fade). */
+@keyframes caretBlink {
+  0%, 45% {
+    opacity: 1;
+  }
+  50%, 100% {
+    opacity: 0;
+  }
+}
+
+.wordmark-caret {
+  animation: caretBlink 1.06s step-end infinite;
+  will-change: opacity;
+}
+
+/* PRO badge shimmer: a light sweep every ~4s. Runs on the inner glass pill,
+   which clips it via overflow-hidden + rounded-full. */
+.pro-shimmer {
   position: relative;
+  overflow: hidden;
 }
 
-.ambient-glow::before {
+.pro-shimmer::after {
   content: '';
   position: absolute;
-  top: -20px;
-  left: -20px;
-  right: -20px;
-  bottom: -20px;
-  background: radial-gradient(circle at 50% 30%, rgba(0, 137, 123, 0.12), transparent 70%);
+  inset: 0;
   pointer-events: none;
-  z-index: 0;
+  background: linear-gradient(
+    115deg,
+    transparent 30%,
+    rgba(255, 255, 255, 0.45) 50%,
+    transparent 70%
+  );
+  transform: translateX(-130%);
+  animation: proShimmerSweep 4s ease-in-out infinite;
+  will-change: transform;
 }
 
-.dark .ambient-glow::before {
-  background: radial-gradient(circle at 50% 30%, rgba(45, 212, 191, 0.1), transparent 70%);
+@keyframes proShimmerSweep {
+  0%,
+  55% {
+    transform: translateX(-130%);
+    opacity: 0;
+  }
+  65% {
+    opacity: 1;
+  }
+  85%,
+  100% {
+    transform: translateX(130%);
+    opacity: 0;
+  }
+}
+
+/* ---------- Floating header: legibility without any container ----------
+   No background, border, or shadow on the wrapper — a soft dark drop-shadow
+   keeps the logo and menu icon readable over the photo. */
+.floating-header > div > button {
+  filter: drop-shadow(0 1px 5px rgba(0, 0, 0, 0.6));
+}
+
+/* 44px tap area for small visual FABs: the ::after halo extends the hit
+   target without changing the visible size or layout. */
+.tap-44 {
+  position: relative;
+}
+.tap-44::after {
+  content: '';
+  position: absolute;
+  inset: -8px;
+}
+
+/* Ring progress transition: motion only, killed under reduced-motion. */
+@media (prefers-reduced-motion: reduce) {
+  .ring-arc {
+    transition: none !important;
+  }
+}
+
+/* ---------- Motion safety & Android performance ---------- */
+@media (prefers-reduced-motion: reduce) {
+  .pro-shimmer::after,
+  .glow-breathe,
+  .halo-breathe,
+  .animate-breathing-glow {
+    animation: none !important;
+  }
+
+  /* Press feedback becomes an instant state change with no spring. */
+  :where(button, [role='button'], [role='switch'], [role='tab'], a[href], summary):not(:disabled) {
+    transition: none !important;
+  }
+
+  .wordmark-enter {
+    animation: none !important;
+  }
+
+  .wordmark-caret {
+    animation: none !important;
+  }
 }

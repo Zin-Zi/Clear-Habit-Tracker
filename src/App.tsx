@@ -1,18 +1,51 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback, Suspense } from 'react';
 import { App as CapacitorApp } from '@capacitor/app';
+import { KeepAwake } from '@capacitor-community/keep-awake';
 import { StatusBar, Style } from '@capacitor/status-bar';
-import { Haptics, ImpactStyle } from '@capacitor/haptics';
-import { Habit, RelapseLog, AppSettings } from './types/habit';
+import { tapLight, setHapticsEnabled } from './services/haptics';
+import {
+  Habit,
+  RelapseLog,
+  AppSettings,
+  DailyStatus,
+  TEXT_COLOR_OPTIONS,
+  TRANSPARENCY_ALPHAS,
+  normalizeTransparencyLevel,
+  BACKGROUND_OPTIONS,
+  normalizeBackgroundId,
+  DEFAULT_TARGET_DAYS,
+  normalizeTargetDays,
+  normalizeBgBlur,
+  MIN_BRIGHTNESS,
+  MAX_BRIGHTNESS,
+  normalizeBrightness,
+  normalizeLogo,
+} from './types/habit';
 import { StorageService } from './services/storage';
-import { TopAppBar } from './components/TopAppBar';
+import { setDailyStatus, calculateStreak } from './utils/dailyLogs';
+import { Wordmark, ensureLogoFont } from './components/Wordmark';
+import { FloatingHeader } from './components/FloatingHeader';
+import { BottomNav } from './components/BottomNav';
 import { HomeScreenView } from './components/HomeScreenView';
-import { HabitsManagerScreen } from './components/HabitsManagerScreen';
-import { AnalyticsScreen } from './components/AnalyticsScreen';
-import { SettingsScreen } from './components/SettingsScreen';
 import { AboutScreenView } from './components/AboutScreenView';
-import { KotlinCodeViewer } from './components/KotlinCodeViewer';
 import { Smartphone, Monitor } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { initTickerLifecycle, pauseTicker, resumeTicker } from './services/ticker';
+
+// Heavy screens split into their own chunks so the first paint stays small.
+// The habit list, header, and nav stay in the main bundle.
+const AnalyticsScreen = React.lazy(() =>
+  import('./components/AnalyticsScreen').then((m) => ({ default: m.AnalyticsScreen }))
+);
+const SettingsScreen = React.lazy(() =>
+  import('./components/SettingsScreen').then((m) => ({ default: m.SettingsScreen }))
+);
+const HabitsManagerScreen = React.lazy(() =>
+  import('./components/HabitsManagerScreen').then((m) => ({ default: m.HabitsManagerScreen }))
+);
+const KotlinCodeViewer = React.lazy(() =>
+  import('./components/KotlinCodeViewer').then((m) => ({ default: m.KotlinCodeViewer }))
+);
 
 export type ScreenType = 'home' | 'stats' | 'settings' | 'about' | 'edit' | 'kotlin_code';
 
@@ -27,29 +60,126 @@ export default function App() {
   const [isAppReady, setIsAppReady] = useState(false);
 
   const lastBackPressTimeRef = useRef<number>(0);
+  const activeScreenRef = useRef<ScreenType>('home');
   const toastTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const [nowTick, setNowTick] = useState(() => Date.now());
 
-  // Sync Dark Mode state to HTML documentElement and Capacitor StatusBar
+  // Re-check streak/best-day boundaries once a minute while the app is open
   useEffect(() => {
-    const isDark = Boolean(settings.darkMode);
-    if (isDark) {
-      document.documentElement.classList.add('dark');
-    } else {
-      document.documentElement.classList.remove('dark');
-    }
+    const t = setInterval(() => setNowTick(Date.now()), 60000);
+    return () => clearInterval(t);
+  }, []);
+
+  // Mirror the current screen for listeners registered once (Escape handler).
+  useEffect(() => {
+    activeScreenRef.current = activeScreen;
+  }, [activeScreen]);
+
+  // Push the appearance settings onto <html> as CSS custom properties.
+  // Doing it here (rather than in each component) means a change repaints the
+  // whole app instantly without re-rendering anything.
+  useEffect(() => {
+    const root = document.documentElement;
+    const option =
+      TEXT_COLOR_OPTIONS.find((c) => c.id === settings.textColor) ?? TEXT_COLOR_OPTIONS[0];
+    root.style.setProperty('--app-text-color', option.value);
+
+    const level = normalizeTransparencyLevel(settings.transparencyLevel);
+    root.style.setProperty('--glass-alpha', String(TRANSPARENCY_ALPHAS[level] ?? 0.3));
+
+    const bg =
+      BACKGROUND_OPTIONS.find((o) => o.id === settings.backgroundId) ?? BACKGROUND_OPTIONS[0];
+    root.style.setProperty('--app-bg-image', `url('${bg.file}')`);
+    root.style.setProperty('--app-bg-blur', `${normalizeBgBlur(settings.bgBlurPx)}px`);
+  }, [settings.textColor, settings.transparencyLevel, settings.backgroundId, settings.bgBlurPx]);
+
+  // Keep the module-level haptic flag in sync with the Settings toggle.
+  useEffect(() => {
+    setHapticsEnabled(settings.hapticsEnabled !== false);
+  }, [settings.hapticsEnabled]);
+
+  // Preload the logo face so the header never flashes a fallback.
+  // useMemo: a fresh object every render would defeat memo'd children.
+  const logoSettings = React.useMemo(() => normalizeLogo(settings.logo), [settings.logo]);
+  useEffect(() => {
+    ensureLogoFont(logoSettings.fontFamily);
+  }, [logoSettings.fontFamily]);
+
+  // Start the shared 1s ticker lifecycle (pause on hide/background).
+  useEffect(() => {
+    initTickerLifecycle();
+  }, []);
+
+  // Global tap haptics: every press on an interactive element buzzes once,
+  // so no button needs its own haptic call. Capture phase + passive so it
+  // never blocks or interferes with the real handler.
+  useEffect(() => {
+    const onPress = (e: PointerEvent) => {
+      const el = e.target as HTMLElement | null;
+      if (el?.closest?.('button, a[href], input, select, textarea, summary, [role="button"], [role="switch"], [role="tab"]')) {
+        try {
+          tapLight();
+        } catch {
+          // Plugin unavailable — ignore.
+        }
+      }
+    };
+    document.addEventListener('pointerdown', onPress, { capture: true, passive: true });
+    return () => document.removeEventListener('pointerdown', onPress, { capture: true });
+  }, []);
+
+  // The app is permanently dark: keep the `dark` class on <html> and pin the
+  // native status bar to the dark palette.
+  useEffect(() => {
+    document.documentElement.classList.add('dark');
 
     // Try setting Capacitor native status bar style (Bonus)
     try {
       if (typeof StatusBar !== 'undefined' && StatusBar.setStyle) {
-        StatusBar.setStyle({ style: isDark ? Style.Dark : Style.Light }).catch(() => {});
+        StatusBar.setStyle({ style: Style.Dark }).catch(() => {});
         if (StatusBar.setBackgroundColor) {
-          StatusBar.setBackgroundColor({ color: isDark ? '#0f172a' : '#ffffff' }).catch(() => {});
+          StatusBar.setBackgroundColor({ color: '#0f172a' }).catch(() => {});
         }
       }
     } catch {
       // Ignored for environments without native plugins
     }
-  }, [settings.darkMode]);
+  }, []);
+
+  // Keep the screen awake while the app is in the foreground.
+  // Releases on background/unmount so the device can sleep normally.
+  useEffect(() => {
+    const enable = async () => {
+      try {
+        await KeepAwake.keepAwake();
+      } catch {
+        // Plugin unavailable (e.g. web browser) — ignore.
+      }
+    };
+    const disable = async () => {
+      try {
+        await KeepAwake.allowSleep();
+      } catch {
+        // Ignored for environments without native plugins.
+      }
+    };
+
+    enable();
+    const stateListener = CapacitorApp.addListener('appStateChange', ({ isActive }) => {
+      if (isActive) {
+        enable();
+        resumeTicker();
+      } else {
+        disable();
+        pauseTicker();
+      }
+    });
+
+    return () => {
+      disable();
+      stateListener.then((h) => h.remove()).catch(() => {});
+    };
+  }, []);
 
   // Hardware Back Button Handler via @capacitor/app
   useEffect(() => {
@@ -67,7 +197,7 @@ export default function App() {
           // First press -> record timestamp & show toast
           lastBackPressTimeRef.current = now;
           try {
-            Haptics.impact({ style: ImpactStyle.Light });
+            tapLight();
           } catch {}
           setShowExitToast(true);
 
@@ -82,14 +212,29 @@ export default function App() {
       }
     });
 
-    // Clean up listener on unmount
+    // Clean up only our own listener so other App listeners
+    // (e.g. appStateChange for KeepAwake) survive screen changes.
     return () => {
       if (toastTimeoutRef.current) {
         clearTimeout(toastTimeoutRef.current);
       }
-      CapacitorApp.removeAllListeners();
+      backButtonListener.then((h) => h.remove()).catch(() => {});
     };
   }, [activeScreen]);
+
+  // Escape mirrors the hardware Back button: returns to the main day counter
+  // from any sub-screen (Settings, Stats, About). Wired to `activeScreen` via a
+  // ref so the listener is registered once instead of on every navigation.
+  useEffect(() => {
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key !== 'Escape') return;
+      if (activeScreenRef.current !== 'home') {
+        setActiveScreen('home');
+      }
+    };
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, []);
 
   // Initial load with smooth splash transition
   const loadData = () => {
@@ -115,60 +260,200 @@ export default function App() {
     loadData();
   }, []);
 
+  // Keep each habit's stored bestStreakDays in sync with its live streak,
+  // so the best badge never shows a stale number after the run ends or
+  // the start date is edited. Functional form avoids stale-closure
+  // overwrites of concurrent reset/edit updates.
+  useEffect(() => {
+    setHabits((prev) => {
+      if (prev.length === 0) return prev;
+      const now = Date.now();
+      let changed = false;
+      const updated = prev.map((h) => {
+        // Same calculator the UI uses, so the persisted best always matches
+        // what the card shows. `{ ...h }` carries `dailyLogs` through untouched.
+        const best = calculateStreak(h, now).bestStreakDays;
+        if (best > (h.bestStreakDays || 0)) {
+          changed = true;
+          return { ...h, bestStreakDays: best };
+        }
+        return h;
+      });
+      if (changed) {
+        return updated;
+      }
+      return prev;
+    });
+  }, [habits, nowTick]);
+
+  // Flush `habits` to storage once, after React has committed, whenever the
+  // habit list actually changes. This replaces the side effects that used to
+  // live inside the state updaters.
+  useEffect(() => {
+    if (habits.length === 0) return;
+    StorageService.saveHabits(habits);
+  }, [habits]);
+
   const currentHabit = habits.find((h) => h.id === activeHabitId) || habits[0];
 
-  const handleUpdateSettings = (newSettings: AppSettings) => {
+  // Settings writes: UI updates instantly, storage writes debounce ~150ms
+  // and always flush on release / hide / app pause so nothing is lost.
+  const settingsSaveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const pendingSettingsRef = useRef<AppSettings | null>(null);
+
+  const flushSettings = useCallback(() => {
+    if (settingsSaveTimer.current) {
+      clearTimeout(settingsSaveTimer.current);
+      settingsSaveTimer.current = null;
+    }
+    const pending = pendingSettingsRef.current;
+    pendingSettingsRef.current = null;
+    if (pending) {
+      try {
+        StorageService.saveSettings(pending);
+      } catch {
+        // Storage failure must never crash the app.
+      }
+    }
+  }, []);
+
+  const handleUpdateSettings = useCallback((newSettings: AppSettings) => {
     setSettings(newSettings);
-    StorageService.saveSettings(newSettings);
-  };
+    pendingSettingsRef.current = newSettings;
+    if (settingsSaveTimer.current) clearTimeout(settingsSaveTimer.current);
+    settingsSaveTimer.current = setTimeout(flushSettings, 150);
+  }, [flushSettings]);
 
-  const handleSelectHabit = (id: string) => {
+  useEffect(() => {
+    const onPointerUp = () => flushSettings();
+    const onVisibility = () => {
+      if (document.hidden) flushSettings();
+    };
+    const onBeforeUnload = () => flushSettings();
+    document.addEventListener('pointerup', onPointerUp);
+    document.addEventListener('visibilitychange', onVisibility);
+    window.addEventListener('beforeunload', onBeforeUnload);
+    let cancelCapState: (() => void) | undefined;
+    import('@capacitor/app')
+      .then(({ App: CapApp }) => {
+        CapApp.addListener('appStateChange', ({ isActive }) => {
+          if (!isActive) flushSettings();
+        })
+          .then((h) => {
+            cancelCapState = () => h.remove();
+          })
+          .catch(() => {});
+      })
+      .catch(() => {});
+    return () => {
+      document.removeEventListener('pointerup', onPointerUp);
+      document.removeEventListener('visibilitychange', onVisibility);
+      window.removeEventListener('beforeunload', onBeforeUnload);
+      cancelCapState?.();
+      flushSettings();
+    };
+  }, [flushSettings]);
+
+  const handleSelectHabit = useCallback((id: string) => {
     setActiveHabitId(id);
-    const updated = { ...settings, activeHabitId: id };
-    handleUpdateSettings(updated);
-  };
+    handleUpdateSettings({ ...settings, activeHabitId: id });
+  }, [settings, handleUpdateSettings]);
 
-  const handleAddHabit = (habitData: Omit<Habit, 'id' | 'createdAt'>) => {
+  // Persistence is handled by the single `useEffect` on `habits` above, so
+  // these handlers only have to produce the next state.
+  const handleAddHabit = useCallback((habitData: Omit<Habit, 'id' | 'createdAt'>) => {
+    const targetDays = settings.targetDays ?? DEFAULT_TARGET_DAYS;
     const newHabit: Habit = {
       ...habitData,
-      id: `habit_${Date.now()}`,
+      targetDays,
+      // Random suffix: two rapid saves in the same millisecond must never
+      // share an id (React keys + SVG gradient ids would collide and cards
+      // would visually overlap).
+      id: `habit_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
       createdAt: new Date().toISOString(),
+      dailyLogs: {},
     };
-    const updated = [...habits, newHabit];
-    setHabits(updated);
-    StorageService.saveHabits(updated);
+    setHabits((prev) => [...prev, newHabit]);
     handleSelectHabit(newHabit.id);
-  };
+  }, [settings.targetDays, handleSelectHabit]);
 
-  const handleUpdateHabit = (updatedHabit: Habit) => {
-    const updated = habits.map((h) => (h.id === updatedHabit.id ? updatedHabit : h));
-    setHabits(updated);
-    StorageService.saveHabits(updated);
-  };
+  // Streak goal from Settings: applies to every habit's progress ring at once.
+  const handlePickTargetDays = useCallback((days: number) => {
+    const next = normalizeTargetDays(days);
+    handleUpdateSettings({ ...settings, targetDays: next });
+    setHabits((prev) => prev.map((h) => ({ ...h, targetDays: next })));
+  }, [settings, handleUpdateSettings]);
 
-  const handleDeleteHabit = (id: string) => {
-    const updated = habits.filter((h) => h.id !== id);
-    setHabits(updated);
-    StorageService.saveHabits(updated);
-    if (activeHabitId === id && updated.length > 0) {
-      handleSelectHabit(updated[0].id);
-    }
-  };
+  const handleUpdateHabit = useCallback((updatedHabit: Habit) => {
+    setHabits((prev) => prev.map((h) => (h.id === updatedHabit.id ? updatedHabit : h)));
+  }, []);
 
-  const handleResetHabit = (habit: Habit) => {
-    const start = new Date(habit.startDate).getTime();
-    const currentDays = Math.max(0, Math.floor((Date.now() - start) / (1000 * 60 * 60 * 24)));
-    const newBest = Math.max(habit.bestStreakDays, currentDays);
+  const handleDeleteHabit = useCallback((id: string) => {
+    setHabits((prev) => {
+      const remaining = prev.filter((h) => h.id !== id);
+      if (activeHabitId === id && remaining.length > 0) {
+        queueMicrotask(() => handleSelectHabit(remaining[0].id));
+      }
+      return remaining;
+    });
+  }, [activeHabitId, handleSelectHabit]);
 
-    const resetHabit: Habit = {
-      ...habit,
-      startDate: new Date().toISOString(),
-      bestStreakDays: newBest,
-    };
-    handleUpdateHabit(resetHabit);
-  };
+  const handleResetHabit = useCallback((habit: Habit) => {
+    // Full reset: both the current streak and the best badge go back to 0.
+    // (Previously best was preserved, which is why the circled badge stayed
+    // at 1d while the big counter correctly went to 0.)
+    setHabits((prev) =>
+      prev.map((h) =>
+        h.id === habit.id
+          ? { ...h, startDate: new Date().toISOString(), bestStreakDays: 0, dailyLogs: {} }
+          : h
+      )
+    );
+  }, []);
+
+  // Mark a single calendar day from the Stats screen.
+  //
+  // Two rules matter here:
+  //  1. Immutability — the updater always builds brand-new objects (new habit
+  //     object + new `dailyLogs` object), never mutating in place, so React sees
+  //     a new reference and re-renders the calendar.
+  //  2. No side effects inside the updater — the `localStorage` write happens
+  //     after commit. React may invoke an updater more than once (concurrent
+  //     rendering / StrictMode), so writing from inside can persist a state
+  //     that was ultimately discarded and silently clobber the newer mark.
+  const handleMarkDay = useCallback((habitId: string, dateKey: string, status: DailyStatus) => {
+    setHabits((prev) => {
+      const target = prev.find((h) => h.id === habitId);
+      if (!target) return prev;
+      return prev.map((h) =>
+        h.id === habitId ? { ...h, dailyLogs: setDailyStatus(h.dailyLogs, dateKey, status) } : h
+      );
+    });
+  }, []);
 
   const isRoot = activeScreen === 'home';
+
+  const handleNavigateToDetails = useCallback((id: string) => {
+    handleSelectHabit(id);
+    setActiveScreen('edit');
+  }, [handleSelectHabit]);
+
+  const handleNavigateToEdit = useCallback((h: Habit) => {
+    handleSelectHabit(h.id);
+    setActiveScreen('edit');
+  }, [handleSelectHabit]);
+
+  const handleAddNewHabit = useCallback(() => {
+    setActiveHabitId('');
+    setActiveScreen('edit');
+  }, []);
+
+  const handleNavigateBack = useCallback(() => setActiveScreen('home'), []);
+  const handleNavigate = useCallback((screen: ScreenType) => setActiveScreen(screen), []);
+  const handleAddFromNav = useCallback(() => {
+    setActiveHabitId('');
+    setActiveScreen('edit');
+  }, []);
 
   const screenTitle =
     activeScreen === 'home'
@@ -184,7 +469,7 @@ export default function App() {
       : 'Android Kotlin Code';
 
   return (
-    <div className="min-h-screen bg-gray-200 dark:bg-slate-950 flex flex-col items-center justify-center text-gray-900 dark:text-slate-100 font-sans p-0 sm:p-4 transition-colors duration-200">
+    <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-center text-slate-100 font-sans p-0 sm:p-4 transition-colors duration-200">
       <AnimatePresence>
         {!isAppReady && (
           <motion.div
@@ -192,36 +477,31 @@ export default function App() {
             initial={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.25 }}
-            className="fixed inset-0 z-50 bg-[#F2F4F7] dark:bg-[#0F172A] flex flex-col items-center justify-center space-y-3"
+            className="fixed inset-0 z-50 bg-[#0F172A] flex flex-col items-center justify-center space-y-3"
           >
-            <div className="w-14 h-14 rounded-2xl bg-[#00897B] flex items-center justify-center text-2xl shadow-lg text-white font-bold">
-              M
-            </div>
-            <span className="text-xl font-extrabold tracking-tight animate-text-shimmer">
-              Momentum
-            </span>
+            <Wordmark showPro={false} className="wordmark-enter" logo={logoSettings} />
           </motion.div>
         )}
       </AnimatePresence>
       {/* Device View Mode Switcher (Large screens) */}
-      <div className="fixed top-3 right-3 z-50 hidden lg:flex items-center gap-1.5 bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-800 p-1 rounded-full shadow-md">
+      <div className="fixed top-3 right-3 z-50 hidden lg:flex items-center gap-1.5 bg-slate-900 border border-slate-800 p-1 rounded-full shadow-md">
         <button
           onClick={() => setActiveScreen('kotlin_code')}
-          className={`px-3 py-1 rounded-full text-xs font-semibold transition-colors ${
-            activeScreen === 'kotlin_code'
-              ? 'bg-teal-600 text-white'
-              : 'text-gray-600 dark:text-slate-300 hover:text-gray-900 dark:hover:text-white'
-          }`}
+          className={`px-3 py-1 rounded-full font-semibold transition-colors ${
+ activeScreen === 'kotlin_code'
+ ? 'bg-white text-zinc-950'
+ : 'text-slate-300 hover:text-white'
+ }`}
         >
           View Kotlin Code
         </button>
         <button
           onClick={() => setIsPhoneFrame(true)}
-          className={`p-1.5 rounded-full text-xs font-semibold transition-colors ${
-            isPhoneFrame && activeScreen !== 'kotlin_code'
-              ? 'bg-teal-600 text-white'
-              : 'text-gray-500 dark:text-slate-400 hover:text-gray-900 dark:hover:text-white'
-          }`}
+          className={`p-1.5 rounded-full font-semibold transition-colors ${
+ isPhoneFrame && activeScreen !== 'kotlin_code'
+ ? 'bg-white text-zinc-950'
+ : 'text-slate-400 hover:text-white'
+ }`}
           title="Phone Bezel"
         >
           <Smartphone className="w-3.5 h-3.5" />
@@ -231,34 +511,38 @@ export default function App() {
             setIsPhoneFrame(false);
             if (activeScreen === 'kotlin_code') setActiveScreen('home');
           }}
-          className={`p-1.5 rounded-full text-xs font-semibold transition-colors ${
-            !isPhoneFrame && activeScreen !== 'kotlin_code'
-              ? 'bg-teal-600 text-white'
-              : 'text-gray-500 dark:text-slate-400 hover:text-gray-900 dark:hover:text-white'
-          }`}
+          className={`p-1.5 rounded-full font-semibold transition-colors ${
+ !isPhoneFrame && activeScreen !== 'kotlin_code'
+ ? 'bg-white text-zinc-950'
+ : 'text-slate-400 hover:text-white'
+ }`}
           title="Full App"
         >
           <Monitor className="w-3.5 h-3.5" />
         </button>
       </div>
 
-      {/* Main Container - Material 3 Device Frame */}
+      {/* Main Container - Material 3 Device Frame.
+          App-wide brightness applies here so every screen, dialog and the
+          bottom bar dim/lift together. */}
       <div
-        className={`w-full bg-[#F2F4F7] dark:bg-[#0F172A] flex flex-col relative overflow-hidden transition-colors duration-200 ${
-          isPhoneFrame
-            ? 'max-w-[420px] h-[100dvh] sm:h-[840px] sm:rounded-3xl sm:border sm:border-gray-300 dark:sm:border-slate-800 sm:shadow-2xl'
-            : 'max-w-xl h-[100dvh] sm:h-[90vh] sm:rounded-2xl sm:border sm:border-gray-300 dark:sm:border-slate-800 shadow-xl'
-        }`}
+        style={{ filter: `brightness(${normalizeBrightness(settings.brightnessPct) / 100})` }}
+        className={`w-full bg-[#0F172A] flex flex-col relative overflow-hidden transition-colors duration-200 ${
+ isPhoneFrame
+ ? 'max-w-[420px] h-[100dvh] sm:h-[840px] sm:rounded-3xl sm:border sm:border-slate-800 sm:shadow-2xl'
+ : 'max-w-xl h-[100dvh] sm:h-[90vh] sm:rounded-2xl sm:border sm:border-slate-800 shadow-xl'
+ }`}
       >
-        {/* Top App Bar with 3-dot overflow menu (Stats, Settings, About) or Back arrow */}
-        <TopAppBar
-          title={screenTitle}
-          isRootScreen={isRoot}
-          onNavigateBack={() => setActiveScreen('home')}
-          onNavigateToStats={() => setActiveScreen('stats')}
-          onNavigateToSettings={() => setActiveScreen('settings')}
-          onNavigateToAbout={() => setActiveScreen('about')}
-        />
+        {/* Floating title + menu over content (no bar). Hidden where the
+            screen owns its header (edit form, kotlin viewer). */}
+        {activeScreen !== 'edit' && activeScreen !== 'kotlin_code' && (
+          <FloatingHeader
+            title={screenTitle}
+            isRootScreen={isRoot}
+            onNavigateBack={handleNavigateBack}
+            logo={logoSettings}
+          />
+        )}
 
         {/* Screen Router with Fast Mobile 200ms Slide-In from Right + Fade Transition */}
         <AnimatePresence mode="wait">
@@ -268,26 +552,24 @@ export default function App() {
             animate={{ x: 0, opacity: 1 }}
             exit={{ x: -14, opacity: 0 }}
             transition={{ duration: 0.18, ease: 'easeInOut' }}
-            className="flex-1 overflow-hidden flex flex-col relative"
+            className="flex-1 min-h-0 overflow-hidden flex flex-col relative"
           >
+            <Suspense
+              fallback={
+                <div className="flex-1 flex items-center justify-center" aria-hidden="true">
+                  <div className="h-10 w-10 rounded-full bg-white/10 animate-pulse" />
+                </div>
+              }
+            >
             {activeScreen === 'home' && (
               <HomeScreenView
                 habits={habits}
                 onSelectHabit={handleSelectHabit}
-                onNavigateToDetails={(id) => {
-                  handleSelectHabit(id);
-                  setActiveScreen('edit');
-                }}
-                onNavigateToEdit={(h) => {
-                  handleSelectHabit(h.id);
-                  setActiveScreen('edit');
-                }}
+                onNavigateToDetails={handleNavigateToDetails}
+                onNavigateToEdit={handleNavigateToEdit}
                 onResetHabit={handleResetHabit}
                 onUpdateHabit={handleUpdateHabit}
-                onAddNewHabit={() => {
-                  setActiveHabitId('');
-                  setActiveScreen('edit');
-                }}
+                onAddNewHabit={handleAddNewHabit}
                 onDeleteHabit={handleDeleteHabit}
               />
             )}
@@ -297,6 +579,8 @@ export default function App() {
                 habit={currentHabit}
                 habits={habits}
                 relapseLogs={relapseLogs}
+                onMarkDay={handleMarkDay}
+                nowMs={nowTick}
                 currentStreakDays={
                   currentHabit
                     ? Math.max(
@@ -312,6 +596,7 @@ export default function App() {
               <SettingsScreen
                 settings={settings}
                 onUpdateSettings={handleUpdateSettings}
+                onPickTargetDays={handlePickTargetDays}
                 onDataReload={loadData}
               />
             )}
@@ -332,15 +617,25 @@ export default function App() {
             )}
 
             {activeScreen === 'kotlin_code' && <KotlinCodeViewer />}
+            </Suspense>
 
             {/* Android Toast Message for Double-Tap Exit */}
             {showExitToast && (
-              <div className="absolute bottom-20 left-1/2 -translate-x-1/2 z-50 bg-gray-900/90 dark:bg-slate-800/95 text-white dark:text-slate-100 text-xs font-medium px-4 py-2 rounded-full shadow-lg backdrop-blur-sm pointer-events-none transition-all duration-200 animate-fade-in border border-gray-700/50 dark:border-slate-700">
+              <div className="absolute bottom-20 left-1/2 -translate-x-1/2 z-50 bg-slate-800/95 text-slate-100 font-medium px-4 py-2 rounded-full shadow-lg backdrop-blur-sm pointer-events-none transition-all duration-200 animate-fade-in border border-slate-700">
                 Press back again to exit
               </div>
             )}
           </motion.main>
         </AnimatePresence>
+
+        {/* Bottom glass navigation — hidden where the screen owns its chrome. */}
+        {activeScreen !== 'edit' && activeScreen !== 'kotlin_code' && (
+          <BottomNav
+            activeScreen={activeScreen}
+            onNavigate={handleNavigate}
+            onAdd={handleAddFromNav}
+          />
+        )}
       </div>
     </div>
   );

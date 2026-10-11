@@ -102,10 +102,10 @@ export const KotlinCodeViewer: React.FC = () => {
                 key={cat}
                 onClick={() => setActiveCategory(cat)}
                 className={`px-2.5 py-1 rounded-lg text-[11px] font-bold uppercase tracking-wider transition-colors ${
-                  activeCategory === cat
-                    ? 'bg-blue-600 text-white'
-                    : 'bg-slate-950 text-slate-400 hover:text-white border border-slate-800'
-                }`}
+ activeCategory === cat
+ ? 'bg-blue-600 text-white'
+ : 'bg-slate-950 text-slate-400 hover:text-white border border-slate-800'
+ }`}
               >
                 {cat}
               </button>
@@ -120,10 +120,10 @@ export const KotlinCodeViewer: React.FC = () => {
               key={file.path}
               onClick={() => setSelectedFile(file)}
               className={`px-3 py-1.5 rounded-xl text-xs font-semibold flex items-center gap-1.5 shrink-0 transition-all ${
-                selectedFile.path === file.path
-                  ? 'bg-blue-600 text-white shadow-md shadow-blue-600/30'
-                  : 'bg-slate-950 text-slate-300 hover:bg-slate-800 border border-slate-800'
-              }`}
+ selectedFile.path === file.path
+ ? 'bg-blue-600 text-white shadow-md shadow-blue-600/30'
+ : 'bg-slate-950 text-slate-300 hover:bg-slate-800 border border-slate-800'
+ }`}
             >
               {getCategoryIcon(file.category)}
               <span>{file.filename}</span>

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Haptics, NotificationType } from '@capacitor/haptics';
+import { notifySuccess } from '../services/haptics';
 import { motion } from 'framer-motion';
 import { Habit } from '../types/habit';
 
@@ -15,18 +15,18 @@ interface HabitsManagerScreenProps {
 }
 
 const COLOR_OPTIONS = [
-  '#00897B', // Soft Teal
-  '#10B981', // Emerald Green
-  '#2563EB', // Royal Blue
-  '#0284C7', // Sky Blue
-  '#6366F1', // Indigo
-  '#7C3AED', // Deep Violet
-  '#EC4899', // Pink
-  '#E11D48', // Rose
-  '#F97316', // Bright Orange
-  '#D97706', // Warm Amber
-  '#84CC16', // Lime Green
-  '#64748B', // Slate Gray
+  '#2DD4BF', // Bright Teal
+  '#34D399', // Bright Emerald
+  '#3B82F6', // Bright Blue
+  '#38BDF8', // Bright Sky
+  '#818CF1', // Bright Indigo
+  '#A78BFA', // Bright Violet
+  '#F472B6', // Bright Pink
+  '#FB7185', // Bright Rose
+  '#FB923C', // Bright Orange
+  '#FBBF24', // Bright Amber
+  '#A3E635', // Bright Lime
+  '#94A3B8', // Bright Slate
 ];
 
 const EMOJI_OPTIONS = [
@@ -71,7 +71,7 @@ export const HabitsManagerScreen: React.FC<HabitsManagerScreenProps> = ({
     }
 
     try {
-      Haptics.notification({ type: NotificationType.Success });
+      notifySuccess();
     } catch {}
 
     if (isEditing && existingHabit) {
@@ -98,38 +98,46 @@ export const HabitsManagerScreen: React.FC<HabitsManagerScreenProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex flex-col bg-[#F2F4F7] dark:bg-[#0F172A] text-gray-900 dark:text-slate-100 overflow-y-auto transition-colors duration-200">
-      {/* Full-Screen Container */}
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/45 backdrop-blur-xl text-white overflow-hidden transition-all duration-200 ease-in-out">
+      {/* One big glass FAB card holding the whole form */}
       <motion.div
-        initial={{ opacity: 0, scale: 0.98 }}
-        animate={{ opacity: 1, scale: 1 }}
-        transition={{ duration: 0.2 }}
-        className="flex-1 flex flex-col max-w-md mx-auto w-full min-h-screen p-5 space-y-6"
+        initial={{ opacity: 0, scale: 0.96, y: 10 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        transition={{ duration: 0.22, ease: 'easeOut' }}
+        className="w-full max-w-md rounded-[28px] bg-white/10 backdrop-blur-xl border border-white/20 shadow-2xl p-4 space-y-3 max-h-[94dvh] overflow-y-auto"
       >
-        {/* Full-Screen Top Navigation Bar */}
-        <div className="flex items-center justify-between pb-2 border-b border-gray-200/60 dark:border-slate-800">
-          <div>
-            <h2 className="text-2xl font-black text-gray-900 dark:text-slate-100">
+        {/* Compact Top Navigation Bar: title … Cancel + Save on top */}
+        <div className="flex items-center justify-between gap-2 py-1">
+          <div className="px-1 min-w-0 flex-1">
+            <h2 className="premium-title text-base font-extrabold tracking-wide text-white drop-shadow-md leading-relaxed transition-all duration-200 ease-in-out truncate">
               {isEditing ? 'Edit Habit' : 'Create Habit'}
             </h2>
-            <p className="text-xs text-gray-500 dark:text-slate-400 mt-0.5">
-              {isEditing ? 'Update habit details and streak start time.' : 'Set up a new habit to build momentum.'}
-            </p>
           </div>
-          <button
-            type="button"
-            onClick={onBack}
-            className="w-9 h-9 rounded-full flex items-center justify-center bg-gray-200/60 dark:bg-slate-800 text-gray-600 dark:text-slate-300 hover:text-gray-900 dark:hover:text-white transition-colors"
-          >
-            ✕
-          </button>
+          <div className="flex shrink-0 items-center gap-2">
+            <motion.button
+              whileTap={{ scale: 0.95 }}
+              type="submit"
+              form="habit-form"
+              className="h-8 px-3.5 rounded-full bg-white text-zinc-950 font-extrabold tracking-wide text-[13px] drop-shadow-md flex items-center justify-center shadow-xl shadow-white/20 cursor-pointer hover:-translate-y-0.5 hover:scale-105 hover:bg-zinc-200 active:scale-95 transition-all duration-200 ease-in-out"
+            >
+              Save
+            </motion.button>
+            <button
+              type="button"
+              onClick={onBack}
+              aria-label="Close"
+              className="w-8 h-8 rounded-full flex items-center justify-center bg-gradient-to-br from-white/15 to-white/5 backdrop-blur-md text-gray-100 shadow-xl cursor-pointer hover:scale-110 hover:-translate-y-1 hover:bg-white/20 active:scale-95 transition-all duration-200 ease-in-out"
+            >
+              ✕
+            </button>
+          </div>
         </div>
 
-        <form onSubmit={handleSave} className="space-y-5 flex-1 flex flex-col justify-between">
-          <div className="space-y-5">
+        <form id="habit-form" onSubmit={handleSave} className="space-y-3 min-h-0">
+          <div className="space-y-4">
           {/* 1. Habit Name */}
-          <div>
-            <label className="block text-xs font-bold text-gray-700 dark:text-slate-300 uppercase tracking-wider mb-1.5">
+          <div className="px-1">
+            <label className="block text-[10px] font-semibold text-gray-400 tracking-widest uppercase mb-1 drop-shadow-sm transition-all duration-200 ease-in-out">
               Habit Name
             </label>
             <input
@@ -141,17 +149,17 @@ export const HabitsManagerScreen: React.FC<HabitsManagerScreenProps> = ({
                 setName(e.target.value);
                 if (e.target.value.trim()) setNameError(false);
               }}
-              className={`w-full bg-gray-50 dark:bg-slate-800 border rounded-2xl px-4 py-3.5 text-sm text-gray-900 dark:text-slate-100 focus:bg-white dark:focus:bg-slate-800 focus:outline-none transition-all shadow-xs ${
+              className={`w-full bg-gradient-to-br from-white/10 to-white/5 backdrop-blur-md rounded-full shadow-xl px-4 py-1.5 text-[13px] font-medium leading-relaxed text-white placeholder:text-gray-400 placeholder:font-normal focus:bg-white/10 focus:outline-none focus:ring-2 focus:ring-white/60 cursor-text transition-all duration-200 ease-in-out hover:-translate-y-0.5 ${
                 nameError
-                  ? 'border-red-500'
-                  : 'border-gray-200 dark:border-slate-700 focus:border-[#00897B] dark:focus:border-teal-400'
+                  ? 'ring-2 ring-red-500'
+                  : ''
               }`}
             />
           </div>
 
           {/* 2. Streak Start Date & Time */}
-          <div>
-            <label className="block text-xs font-bold text-gray-700 dark:text-slate-300 uppercase tracking-wider mb-1.5">
+          <div className="px-1">
+            <label className="block text-[10px] font-semibold text-gray-400 tracking-widest uppercase mb-1 drop-shadow-sm transition-all duration-200 ease-in-out">
               Start Date & Time
             </label>
             <input
@@ -159,25 +167,26 @@ export const HabitsManagerScreen: React.FC<HabitsManagerScreenProps> = ({
               max={toLocalISOString()}
               value={startDateTime}
               onChange={(e) => setStartDateTime(e.target.value)}
-              className="w-full bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-2xl px-4 py-3.5 text-sm text-gray-900 dark:text-slate-100 focus:bg-white dark:focus:bg-slate-800 focus:outline-none focus:border-[#00897B] dark:focus:border-teal-400 cursor-pointer transition-all shadow-xs"
+              className="w-full bg-gradient-to-br from-white/10 to-white/5 backdrop-blur-md rounded-full shadow-xl px-4 py-1.5 text-[13px] font-medium leading-relaxed text-white focus:bg-white/10 focus:outline-none focus:ring-2 focus:ring-white/60 cursor-pointer transition-all duration-200 ease-in-out hover:-translate-y-0.5 [color-scheme:dark]"
             />
           </div>
 
           {/* 3. Accent Color Grid */}
-          <div>
-            <label className="block text-xs font-bold text-gray-700 dark:text-slate-300 uppercase tracking-wider mb-2.5">
+          <div className="px-1">
+            <label className="block text-[10px] font-semibold text-gray-400 tracking-widest uppercase mb-1 drop-shadow-sm transition-all duration-200 ease-in-out">
               Color Theme
             </label>
-            <div className="grid grid-cols-6 gap-3 px-1">
+            <div className="grid grid-cols-6 gap-2 px-1">
               {COLOR_OPTIONS.map((color) => (
                 <button
                   type="button"
                   key={color}
                   onClick={() => setSelectedColor(color)}
                   style={{ backgroundColor: color }}
-                  className={`w-9 h-9 rounded-full justify-self-center transition-all ${
+                  aria-label={`Color ${color}`}
+                  className={`w-8 h-8 rounded-full justify-self-center backdrop-blur-md shadow-xl cursor-pointer hover:-translate-y-1 hover:scale-110 active:scale-95 transition-all duration-200 ease-in-out ${
                     selectedColor === color
-                      ? 'ring-3 ring-[#00897B] dark:ring-teal-400 ring-offset-2 ring-offset-[#F2F4F7] dark:ring-offset-[#0F172A] scale-110 shadow-md'
+                      ? 'ring-2 ring-white scale-110 shadow-xl'
                       : 'opacity-85 hover:opacity-100'
                   }`}
                 />
@@ -186,20 +195,20 @@ export const HabitsManagerScreen: React.FC<HabitsManagerScreenProps> = ({
           </div>
 
           {/* 4. Habit Icon Grid */}
-          <div>
-            <label className="block text-xs font-bold text-gray-700 dark:text-slate-300 uppercase tracking-wider mb-2.5">
+          <div className="px-1">
+            <label className="block text-[10px] font-semibold text-gray-400 tracking-widest uppercase mb-1 drop-shadow-sm transition-all duration-200 ease-in-out">
               Icon
             </label>
-            <div className="grid grid-cols-6 gap-2.5 max-h-48 overflow-y-auto px-1 py-1">
+            <div className="grid grid-cols-6 gap-2 px-1">
               {EMOJI_OPTIONS.map((emoji) => (
                 <button
                   type="button"
                   key={emoji}
                   onClick={() => setSelectedEmoji(emoji)}
-                  className={`w-11 h-11 rounded-2xl text-xl flex items-center justify-center justify-self-center transition-all ${
+                  className={`w-8 h-8 rounded-full text-xs flex items-center justify-center justify-self-center backdrop-blur-md shadow-xl cursor-pointer hover:-translate-y-1 hover:scale-110 active:scale-95 transition-all duration-200 ease-in-out ${
                     selectedEmoji === emoji
-                      ? 'bg-[#00897B]/15 dark:bg-teal-950/60 border-2 border-[#00897B] dark:border-teal-400 scale-105 shadow-xs'
-                      : 'bg-white/80 dark:bg-slate-800/80 border border-gray-200 dark:border-slate-700 hover:bg-gray-100 dark:hover:bg-slate-700'
+                      ? 'bg-gradient-to-br from-white/20 to-white/10 text-white scale-105 shadow-xl ring-2 ring-white'
+                      : 'bg-white/10 text-gray-100 hover:bg-white/15'
                   }`}
                 >
                   {emoji}
@@ -209,51 +218,35 @@ export const HabitsManagerScreen: React.FC<HabitsManagerScreenProps> = ({
           </div>
           </div>
 
-          {/* Action Buttons */}
-          <div className="pt-3 space-y-2.5">
-            <motion.button
-              whileTap={{ scale: 0.96 }}
-              type="submit"
-              className="w-full h-12 rounded-2xl bg-[#00897B] hover:bg-[#00796B] dark:bg-teal-600 dark:hover:bg-teal-500 text-white font-bold text-sm flex items-center justify-center shadow-md transition-colors"
-            >
-              Save Habit
-            </motion.button>
-
+          {/* Destructive action stays pinned at the bottom */}
+          <div className="pt-1 space-y-2">
             {isEditing && existingHabit && (
               <motion.button
                 whileTap={{ scale: 0.96 }}
                 type="button"
                 onClick={() => setShowConfirmDelete(true)}
-                className="w-full h-12 rounded-2xl bg-white dark:bg-slate-900 border border-red-200 dark:border-red-900/50 text-red-600 dark:text-rose-400 font-bold text-sm flex items-center justify-center shadow-xs transition-colors hover:bg-red-50 dark:hover:bg-red-950/30"
+                className="w-full h-10 rounded-full bg-gradient-to-br from-white/15 to-white/5 backdrop-blur-lg text-zinc-100 font-bold tracking-wide drop-shadow-md flex items-center justify-center shadow-xl shadow-white/20 cursor-pointer hover:-translate-y-1 hover:scale-[1.02] hover:bg-white/15 active:scale-95 transition-all duration-200 ease-in-out"
               >
                 Delete Habit
               </motion.button>
             )}
-
-            <button
-              type="button"
-              onClick={onBack}
-              className="w-full py-2 text-xs font-semibold text-gray-500 dark:text-slate-400 hover:text-gray-900 dark:hover:text-white text-center transition-colors"
-            >
-              Cancel
-            </button>
           </div>
         </form>
       </motion.div>
 
       {/* Delete Confirmation Dialog */}
       {showConfirmDelete && existingHabit && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 dark:bg-black/75 backdrop-blur-xs">
-          <div className="bg-white dark:bg-slate-900 rounded-2xl p-5 max-w-xs w-full space-y-3 shadow-xl border border-gray-100 dark:border-slate-800">
-            <h3 className="text-base font-bold text-gray-900 dark:text-slate-100">Delete "{existingHabit.name}"?</h3>
-            <p className="text-xs text-gray-600 dark:text-slate-400 leading-relaxed">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-xl animate-fade-in">
+          <div className="bg-gray-900/25 backdrop-blur-xl rounded-3xl p-5 max-w-xs w-full space-y-3 shadow-2xl animate-fade-in">
+            <h3 className="text-base font-extrabold tracking-wide text-white drop-shadow-md leading-relaxed">Delete "{existingHabit.name}"?</h3>
+            <p className="text-sm font-normal text-gray-200 leading-relaxed drop-shadow-sm px-1 transition-all duration-200 ease-in-out">
               Permanently remove this habit and all its history?
             </p>
             <div className="flex items-center justify-end gap-2 pt-2">
               <button
                 type="button"
                 onClick={() => setShowConfirmDelete(false)}
-                className="px-3.5 py-2 text-xs font-semibold text-gray-600 dark:text-slate-300 hover:text-gray-900 dark:hover:text-white rounded-lg hover:bg-gray-100 dark:hover:bg-slate-800 transition-colors"
+                className="px-4 py-2 rounded-full bg-white/10 backdrop-blur-md font-semibold text-gray-200 shadow-xl cursor-pointer hover:scale-105 hover:-translate-y-1 hover:bg-white/20 hover:text-white active:scale-95 transition-all duration-200 ease-in-out"
               >
                 Cancel
               </button>
@@ -263,7 +256,7 @@ export const HabitsManagerScreen: React.FC<HabitsManagerScreenProps> = ({
                   onDeleteHabit(existingHabit.id);
                   onBack();
                 }}
-                className="px-4 py-2 text-xs font-bold bg-red-600 hover:bg-red-700 text-white rounded-xl shadow-sm transition-colors"
+                className="px-4 py-2 text-xs font-bold tracking-wide text-white drop-shadow-md rounded-full bg-gradient-to-br from-white/15 to-white/5 backdrop-blur-lg shadow-xl shadow-white/20 cursor-pointer hover:-translate-y-1 active:scale-95 transition-all duration-200 ease-in-out"
               >
                 Delete
               </button>

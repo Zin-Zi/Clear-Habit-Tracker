@@ -1,83 +1,78 @@
 import React from 'react';
-import { Zap, CheckCircle2, Shield } from 'lucide-react';
 
 export const AboutScreenView: React.FC = () => {
   return (
-    <div className="flex-1 flex flex-col p-5 max-w-md mx-auto w-full space-y-4 bg-[#F2F4F7] dark:bg-[#0F172A] text-gray-900 dark:text-slate-100 overflow-y-auto relative transition-colors duration-200">
+    <div className="flex-1 flex flex-col items-center px-6 pb-28 pt-24 max-w-md mx-auto w-full overflow-y-auto relative transition-all duration-200 ease-in-out">
+      {/* Same wallpaper backdrop as Home — glass needs something to refract. */}
+      <div className="home-bg" aria-hidden="true" />
+      <div className="home-overlay" aria-hidden="true" />
       {/* Background Soft Glow */}
-      <div className="absolute top-10 right-0 w-72 h-72 bg-[#00897B]/15 dark:bg-teal-500/10 rounded-full blur-3xl pointer-events-none z-0" />
+      <div className="absolute top-10 right-0 w-72 h-72 bg-white/5 rounded-full blur-3xl pointer-events-none z-0" />
 
-      {/* Header Badge Card */}
-      <div className="glass-card rounded-2xl p-5 shadow-xl border border-white/60 dark:border-slate-800/80 flex items-center justify-between z-10 relative">
-        <div className="flex items-center gap-3">
-          <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-[#00897B] to-emerald-600 text-white flex items-center justify-center font-black text-xl shadow-md">
-            M
-          </div>
-          <div>
-            <div className="flex items-center gap-1.5">
-              <h2 className="text-lg font-black text-gray-900 dark:text-slate-100 tracking-tight">
-                Momentum
-              </h2>
-              <span className="text-[9px] font-black tracking-wider uppercase px-1.5 py-0.5 rounded bg-gradient-to-r from-[#00897B] to-emerald-500 text-white">
-                PRO
-              </span>
-            </div>
-            <p className="text-xs font-semibold text-[#00897B] dark:text-teal-400">
-              Clean Habit Tracker
-            </p>
-          </div>
+      {/* Hero: real app launcher icon + name + version */}
+      <div className="flex flex-col items-center text-center z-10 animate-fade-in">
+        <img
+          src="/images/app-icon.png"
+          alt="Momentum app icon"
+          className="h-16 w-16 rounded-[18px] shadow-xl transition-all duration-200 ease-in-out hover:scale-105"
+          loading="lazy"
+        />
+        <div className="mt-4 flex items-center gap-2">
+          <h2 className="font-display text-2xl font-extrabold tracking-tight text-white drop-shadow-md">
+            Momentum
+          </h2>
+          <span className="rounded-full bg-white/10 px-2 py-0.5 text-[10px] font-bold tracking-widest text-white shadow-lg backdrop-blur-md">
+            PRO
+          </span>
         </div>
-        <span className="px-3 py-1 bg-gray-100/80 dark:bg-slate-800/80 border border-gray-200/60 dark:border-slate-700/60 rounded-full text-[11px] font-mono font-bold text-gray-600 dark:text-slate-300">
+        <p className="mt-1 text-sm font-medium tracking-wide text-zinc-300 drop-shadow-sm">
+          Clean Habit Tracker
+        </p>
+        <span className="mt-3 rounded-full bg-white/5 px-3 py-1 font-mono text-[11px] font-bold text-zinc-400 shadow-md backdrop-blur-sm">
           v1.0.0
         </span>
       </div>
 
-      {/* Philosophy Card */}
-      <div className="glass-card rounded-2xl p-5 shadow-xl border border-white/60 dark:border-slate-800/80 space-y-1.5 z-10 relative">
-        <h3 className="text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-slate-400">
+      {/* Philosophy */}
+      <div className="mt-8 flex max-w-xs flex-col items-center text-center z-10 animate-fade-in">
+        <div className="text-[11px] font-bold uppercase tracking-[0.3em] text-zinc-400 drop-shadow-sm">
           Philosophy
-        </h3>
-        <p className="text-sm text-gray-700 dark:text-slate-200 leading-relaxed font-medium">
-          Consistency is the key to mastery. Momentum helps you build daily habits with a distraction-free experience.
+        </div>
+        <p className="mt-2 text-[15px] font-medium leading-relaxed text-zinc-100 drop-shadow-md">
+          Consistency is the key to mastery. Build daily habits with a
+          distraction-free experience.
         </p>
       </div>
 
-      {/* 3 Practical Benefits Cards */}
-      <div className="space-y-2.5 z-10 relative">
-        <h3 className="text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-slate-400 px-1">
-          Key Benefits
-        </h3>
-
-        <div className="glass-card rounded-2xl p-4 shadow-lg border border-white/60 dark:border-slate-800/80 flex items-center gap-3.5">
-          <div className="w-10 h-10 rounded-xl bg-teal-50 dark:bg-teal-950/60 text-[#00897B] dark:text-teal-400 flex items-center justify-center shrink-0">
-            <Zap className="w-5 h-5 stroke-[2.5]" />
-          </div>
-          <div>
-            <div className="text-sm font-bold text-gray-900 dark:text-slate-100">Build Discipline</div>
-            <div className="text-xs text-gray-500 dark:text-slate-400">Build daily consistency day by day.</div>
-          </div>
+      {/* How it works */}
+      <div className="mt-8 flex w-full max-w-xs flex-col z-10 animate-fade-in">
+        <div className="text-center text-[11px] font-bold uppercase tracking-[0.3em] text-zinc-400 drop-shadow-sm">
+          How it works
         </div>
-
-        <div className="glass-card rounded-2xl p-4 shadow-lg border border-white/60 dark:border-slate-800/80 flex items-center gap-3.5">
-          <div className="w-10 h-10 rounded-xl bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 flex items-center justify-center shrink-0">
-            <CheckCircle2 className="w-5 h-5 stroke-[2.5]" />
-          </div>
-          <div>
-            <div className="text-sm font-bold text-gray-900 dark:text-slate-100">Accurate Streak Tracking</div>
-            <div className="text-xs text-gray-500 dark:text-slate-400">Track 24-hour cycles with live elapsed timers.</div>
-          </div>
-        </div>
-
-        <div className="glass-card rounded-2xl p-4 shadow-lg border border-white/60 dark:border-slate-800/80 flex items-center gap-3.5">
-          <div className="w-10 h-10 rounded-xl bg-amber-50 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0">
-            <Shield className="w-5 h-5 stroke-[2.5]" />
-          </div>
-          <div>
-            <div className="text-sm font-bold text-gray-900 dark:text-slate-100">100% Offline & Private</div>
-            <div className="text-xs text-gray-500 dark:text-slate-400">Distraction-free data saved locally on device.</div>
-          </div>
+        <div className="mt-3 flex flex-col gap-3">
+          {[
+            { n: '1', title: 'Create a habit', desc: 'Tap + below, name it, pick a colour and icon.' },
+            { n: '2', title: 'Build your streak', desc: 'The counter runs in 24-hour cycles from your start.' },
+            { n: '3', title: 'Mark your days', desc: 'In Stats, Done extends the run and Skip pauses it.' },
+            { n: '4', title: 'Reach your goal', desc: 'The ring fills toward your target days. Reset anytime to restart.' },
+          ].map((step) => (
+            <div key={step.n} className="flex items-center gap-3">
+              <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-white/10 text-xs font-black text-white shadow-lg backdrop-blur-md">
+                {step.n}
+              </span>
+              <span className="min-w-0 text-left">
+                <span className="block text-sm font-bold leading-tight text-white drop-shadow-sm">
+                  {step.title}
+                </span>
+                <span className="block text-xs font-normal leading-relaxed text-zinc-300">
+                  {step.desc}
+                </span>
+              </span>
+            </div>
+          ))}
         </div>
       </div>
+
     </div>
   );
 };

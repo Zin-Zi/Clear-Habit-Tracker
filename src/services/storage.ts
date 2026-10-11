@@ -1,4 +1,21 @@
-import { Habit, RelapseLog, AppSettings, Milestone } from '../types/habit';
+import {
+  Habit,
+  RelapseLog,
+  AppSettings,
+  DEFAULT_TRANSPARENCY_LEVEL,
+  normalizeTransparencyLevel,
+  DEFAULT_TARGET_DAYS,
+  normalizeTargetDays,
+  DEFAULT_BACKGROUND_ID,
+  normalizeBackgroundId,
+  DEFAULT_BG_BLUR,
+  normalizeBgBlur,
+  DEFAULT_BRIGHTNESS,
+  normalizeBrightness,
+  DEFAULT_LOGO,
+  normalizeLogo,
+  migrateHabitColor,
+} from '../types/habit';
 
 const STORAGE_KEYS = {
   HABITS: 'nofap_habits_v1',
@@ -6,23 +23,9 @@ const STORAGE_KEYS = {
   SETTINGS: 'nofap_settings_v1',
 };
 
-export const DEFAULT_MILESTONES: Milestone[] = [
-  { days: 1, title: 'Day 1: The Spark', description: 'The journey of a thousand miles begins with a single step.', icon: '🌱', color: '#10B981' },
-  { days: 3, title: 'Day 3: Breaking the Loop', description: 'Surpassed the initial withdrawal peak. Dopamine receptors begin resting.', icon: '🌿', color: '#06B6D4' },
-  { days: 7, title: 'Day 7: Testosterone Peak & Clarity', description: 'One full week of self-control. Energy and mental fog begin lifting.', icon: '⚡', color: '#3B82F6' },
-  { days: 14, title: 'Day 14: Fortified Willpower', description: 'Two weeks clean. Habitual triggers lose their primary automatic grip.', icon: '🛡️', color: '#6366F1' },
-  { days: 21, title: 'Day 21: Neural Pathway Rewiring', description: '21 days to break an old reflex and build a new conscious baseline.', icon: '🧠', color: '#8B5CF6' },
-  { days: 30, title: 'Day 30: One Month Titan', description: 'One entire month. Self-respect, confidence, and focus surge.', icon: '🏆', color: '#EC4899' },
-  { days: 60, title: 'Day 60: The Diamond Phase', description: 'Urges are now manageable ripples rather than overwhelming tsunamis.', icon: '💎', color: '#F59E0B' },
-  { days: 90, title: 'Day 90: Complete Brain Reboot', description: 'The legendary 90-day reset. Full neural baseline restoration.', icon: '👑', color: '#EF4444' },
-  { days: 180, title: 'Day 180: Master of Impulse', description: 'Half a year of continuous discipline. A completely renewed lifestyle.', icon: '🔥', color: '#F97316' },
-  { days: 365, title: 'Day 365: Transcendent Legend', description: 'One full year. True freedom, unwavering clarity and life mastery.', icon: '🌟', color: '#EAB308' },
-];
-
 export const INITIAL_HABITS: Habit[] = [];
 
 export const INITIAL_SETTINGS: AppSettings = {
-  darkMode: false,
   reminderEnabled: false,
   reminderTime: '20:00',
   dynamicColors: true,
@@ -32,6 +35,13 @@ export const INITIAL_SETTINGS: AppSettings = {
   activeHabitId: '',
   counterDisplayUnit: 'detailed',
   dailyCheckInReminder: true,
+  textColor: 'white',
+  transparencyLevel: DEFAULT_TRANSPARENCY_LEVEL,
+  targetDays: DEFAULT_TARGET_DAYS,
+  backgroundId: DEFAULT_BACKGROUND_ID,
+  bgBlurPx: DEFAULT_BG_BLUR,
+  brightnessPct: DEFAULT_BRIGHTNESS,
+  logo: DEFAULT_LOGO,
 };
 
 export const INITIAL_RELAPSES: RelapseLog[] = [];
@@ -40,7 +50,35 @@ export const StorageService = {
   getHabits(): Habit[] {
     try {
       const data = localStorage.getItem(STORAGE_KEYS.HABITS);
-      if (data) return JSON.parse(data);
+      if (data) {
+        const parsed = JSON.parse(data) as Habit[];
+        // Habits created before the calendar existed have no `dailyLogs`.
+        // Normalise so every consumer can read it without optional chaining.
+        // Also migrates legacy muted habit colours to the bright palette.
+        const normalized = parsed.map((h) => {
+          const withLogs =
+            h.dailyLogs && typeof h.dailyLogs === 'object'
+              ? h
+              : { ...h, dailyLogs: {} as NonNullable<Habit['dailyLogs']> };
+          const migratedColor = migrateHabitColor(withLogs.color || '');
+          return migratedColor !== withLogs.color
+            ? { ...withLogs, color: migratedColor }
+            : withLogs;
+        });
+        // De-duplicate ids (React keys + SVG gradient ids must be unique or
+        // cards render on top of each other).
+        const seen = new Set<string>();
+        let dupes = false;
+        for (const h of normalized) {
+          if (seen.has(h.id)) {
+            h.id = `${h.id}_${Math.random().toString(36).slice(2, 8)}`;
+            dupes = true;
+          }
+          seen.add(h.id);
+        }
+        if (dupes || normalized.some((h, i) => h !== parsed[i])) this.saveHabits(normalized);
+        return normalized;
+      }
     } catch (e) {
       console.error('Failed to load habits', e);
     }
@@ -78,7 +116,38 @@ export const StorageService = {
   getSettings(): AppSettings {
     try {
       const data = localStorage.getItem(STORAGE_KEYS.SETTINGS);
-      if (data) return JSON.parse(data);
+      if (data) {
+        const parsed = JSON.parse(data) as AppSettings & { darkMode?: boolean };
+
+        // Permanently dark: drop any legacy theme preference.
+        const { darkMode: _removed, ...withoutTheme } = parsed;
+
+        // Merge over the defaults so settings added in later versions
+        // (textColor, transparencyLevel, …) exist for existing installs
+        // instead of coming back undefined.
+        const merged: AppSettings = { ...INITIAL_SETTINGS, ...withoutTheme };
+
+        // Migrates the old 1…6 scale (and any corrupt value) into 5…10.
+        merged.transparencyLevel = normalizeTransparencyLevel(merged.transparencyLevel);
+
+        // Streak goal added later — normalize so old installs get the default.
+        merged.targetDays = normalizeTargetDays(merged.targetDays);
+
+        // Background picker added later — same migration.
+        merged.backgroundId = normalizeBackgroundId(merged.backgroundId);
+
+        // Background blur added later — same migration.
+        merged.bgBlurPx = normalizeBgBlur(merged.bgBlurPx);
+
+        // App brightness added later — same migration.
+        merged.brightnessPct = normalizeBrightness(merged.brightnessPct);
+
+        // Logo customization added later — same migration.
+        merged.logo = normalizeLogo(merged.logo);
+
+        this.saveSettings(merged);
+        return merged;
+      }
     } catch (e) {
       console.error('Failed to load settings', e);
     }
