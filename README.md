@@ -1,6 +1,6 @@
 # Clear Habit Tracker
 
-A minimalist, 100% offline Android habit tracker for NoFap and personal streaks. Built with Kotlin and Jetpack Compose.
+A minimalist, 100% offline Android habit tracker for personal streaks. Built with Kotlin and Jetpack Compose.
 
 ## Features
 
